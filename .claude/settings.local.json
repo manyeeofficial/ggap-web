@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npx next dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(unzip:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(ls:*)",
+      "Bash(npx next build:*)"
+    ]
+  }
+}
