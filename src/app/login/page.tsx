@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
@@ -14,7 +14,7 @@ function setCookie(name: string, value: string, maxAge: number) {
   document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=None; Secure`
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { fetchMember } = useMemberStore()
@@ -162,6 +162,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
+
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
             {/* <Button
@@ -274,5 +275,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
