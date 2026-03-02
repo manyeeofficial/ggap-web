@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="h-full bg-gray-50 flex flex-col">
         <div className="bg-white border-b p-6">
           <button onClick={() => router.push('/login')} className="w-10 h-10 flex items-center justify-center">
             <ArrowLeft className="w-6 h-6" />
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-full bg-gray-50 flex flex-col">
       <div className="bg-white border-b p-6">
         <button onClick={() => router.push('/login')} className="w-10 h-10 flex items-center justify-center">
           <ArrowLeft className="w-6 h-6" />

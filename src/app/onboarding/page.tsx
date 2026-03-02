@@ -41,7 +41,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="h-full bg-white flex flex-col">
       <div className="p-6 flex justify-end">
         <Button variant="ghost" onClick={() => router.push('/login')} className="text-gray-500">
           건너뛰기

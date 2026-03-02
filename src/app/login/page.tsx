@@ -99,7 +99,7 @@ function LoginContent() {
 
   if (appleSignup) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="h-full bg-white">
         <div className="p-6 flex items-center border-b">
           <button onClick={() => setAppleSignup(null)}>
             <ArrowLeft className="w-6 h-6" />
@@ -159,7 +159,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="h-full bg-white flex flex-col">
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
 

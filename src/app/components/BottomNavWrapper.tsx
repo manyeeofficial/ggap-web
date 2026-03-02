@@ -28,7 +28,7 @@ export function BottomNavWrapper({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col max-w-[430px] mx-auto">
+    <div className="h-dvh bg-gray-50 flex flex-col max-w-[430px] mx-auto">
       <div className={`flex-1 overflow-auto ${showBottomNav ? 'pb-20' : ''}`}>
         {children}
       </div>
