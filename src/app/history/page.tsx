@@ -178,7 +178,7 @@ export default function HistoryPage() {
             <div key={group.label} className="mb-1">
               {/* 월별 섹션 헤더 */}
               <div className="px-5 pt-4 pb-1">
-                <span className="text-xs font-semibold text-gray-400 tracking-wide uppercase">
+                <span className="text-sm font-semibold text-gray-400 tracking-wide uppercase">
                   {group.label}
                 </span>
               </div>

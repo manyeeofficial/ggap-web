@@ -91,7 +91,7 @@ export default function SettingsPage() {
         {settingsSections.map((section, sIdx) => (
           <div key={sIdx} className="mt-6">
             <div className="px-5 pb-1.5">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              <span className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
                 {section.title}
               </span>
             </div>

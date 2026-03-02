@@ -163,7 +163,7 @@ export default function MySkinPage() {
         <div className="px-5 py-6 border-b border-gray-100">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">내 얼굴값</p>
+              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">내 얼굴값</p>
               {latestAnalysis ? (
                 <>
                   <div className="flex items-baseline gap-1.5">
@@ -179,7 +179,7 @@ export default function MySkinPage() {
                       >
                         {faceValueChange > 0 ? '▲' : '▼'} {Math.abs(faceValueChange).toLocaleString()}원
                       </span>
-                      <span className="text-xs text-gray-400">이전 대비</span>
+                      <span className="text-sm text-gray-400">이전 대비</span>
                     </div>
                   )}
                 </>
@@ -239,7 +239,7 @@ export default function MySkinPage() {
         {latestAnalysis && (
           <div className="px-5 py-6 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">현재 피부 상태</p>
+              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">현재 피부 상태</p>
               {latestAnalysis.createdAt && (
                 <span className="text-xs text-gray-400">{formatShortDate(latestAnalysis.createdAt)} 분석</span>
               )}
@@ -291,7 +291,7 @@ export default function MySkinPage() {
         {/* 트렌드 차트 */}
         {trendData.length >= 2 && (
           <div className="px-5 py-6 border-b border-gray-100">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">얼굴값 추세</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">얼굴값 추세</p>
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
@@ -327,17 +327,17 @@ export default function MySkinPage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-3">최근 {trendData.length}회 분석 결과 기준</p>
+            <p className="text-sm text-gray-400 text-center mt-3">최근 {trendData.length}회 분석 결과 기준</p>
           </div>
         )}
 
         {/* 스킨 프로필 */}
         <div className="px-5 py-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">스킨 프로필</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">스킨 프로필</p>
             <button
               onClick={() => router.push('/skin-profile-edit')}
-              className="flex items-center gap-1 text-xs font-medium text-indigo-600"
+              className="flex items-center gap-1 text-sm font-medium text-indigo-600"
             >
               <Edit className="w-3 h-3" />편집
             </button>
@@ -347,7 +347,7 @@ export default function MySkinPage() {
             <div className="space-y-4">
               {skinProfile.skinType && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">피부 타입</p>
+                  <p className="text-sm text-gray-400 mb-2">피부 타입</p>
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SKIN_TYPE_COLOR[skinProfile.skinType]}`}
                   >
@@ -357,7 +357,7 @@ export default function MySkinPage() {
               )}
               {skinProfile.concerns.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">주요 고민</p>
+                  <p className="text-sm text-gray-400 mb-2">주요 고민</p>
                   <div className="flex flex-wrap gap-1.5">
                     {skinProfile.concerns.map((c, i) => (
                       <span
@@ -372,7 +372,7 @@ export default function MySkinPage() {
               )}
               {skinProfile.goals.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-2">관리 목표</p>
+                  <p className="text-sm text-gray-400 mb-2">관리 목표</p>
                   <div className="flex flex-wrap gap-1.5">
                     {skinProfile.goals.map((g, i) => (
                       <span
@@ -386,9 +386,9 @@ export default function MySkinPage() {
                 </div>
               )}
               <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-xs text-gray-400">프로필 완성도</span>
+                <span className="text-sm text-gray-400">프로필 완성도</span>
                 <span
-                  className={`text-xs font-semibold ${profileCompletion === 100 ? 'text-emerald-600' : 'text-orange-500'}`}
+                  className={`text-sm font-semibold ${profileCompletion === 100 ? 'text-emerald-600' : 'text-orange-500'}`}
                 >
                   {profileCompletion}%
                 </span>

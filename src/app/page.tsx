@@ -87,12 +87,12 @@ export default function HomePage() {
 
       {/* 촬영 가이드 */}
       <div className="px-5 py-5 border-b border-gray-100">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">촬영 가이드</p>
+        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">촬영 가이드</p>
         <div className="space-y-2.5">
           {['정면을 바라보고 촬영해주세요', '충분한 조명을 확보해주세요', '안경과 마스크를 벗어주세요'].map((tip, i) => (
             <div key={i} className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-[10px] font-bold text-indigo-600">{i + 1}</span>
+                <span className="text-xs font-bold text-indigo-600">{i + 1}</span>
               </div>
               <p className="text-sm text-gray-600">{tip}</p>
             </div>
@@ -103,7 +103,7 @@ export default function HomePage() {
       {/* 랭킹 */}
       {(loading || ranking?.overall) && (
         <div className="px-5 py-5 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">나의 랭킹</p>
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">나의 랭킹</p>
           {loading ? (
             <div className="flex gap-3">
               {[1, 2, 3].map((i) => (
@@ -123,7 +123,7 @@ export default function HomePage() {
                     key={i}
                     className="flex-1 bg-indigo-50 rounded-2xl px-4 py-3"
                   >
-                    <p className="text-[10px] font-semibold text-indigo-400 mb-0.5">
+                    <p className="text-xs font-semibold text-indigo-400 mb-0.5">
                       {group!.label ?? '전체'}
                     </p>
                     <p className="text-xl font-bold text-indigo-600 leading-tight">
@@ -139,8 +139,8 @@ export default function HomePage() {
       {/* 최근 분석 */}
       <div>
         <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">최근 분석</p>
-          <button onClick={() => router.push('/history')} className="text-xs font-medium text-indigo-600">
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">최근 분석</p>
+          <button onClick={() => router.push('/history')} className="text-sm font-medium text-indigo-600">
             전체보기
           </button>
         </div>
