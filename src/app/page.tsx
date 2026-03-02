@@ -74,8 +74,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Hero */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">얼굴 분석</h1>
-        <p className="text-white/70 text-sm mb-6">AI가 3초 만에 피부를 분석해드려요</p>
+        <h1 className="text-2xl font-bold text-white mb-1">ㅇㄱㄱ - 얼굴값 분석</h1>
+        <p className="text-white/70 text-sm mb-6">얼굴값 췍! 상위 몇 %인지 궁금하다면?</p>
         <Button
           onClick={() => router.push('/camera')}
           className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 font-semibold rounded-2xl shadow-none"

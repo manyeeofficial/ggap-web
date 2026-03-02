@@ -7,8 +7,24 @@ import { SkinProfileProvider } from '@/lib/store/skin-profile-store'
 import { Toaster } from './components/ui/sonner'
 
 export const metadata: Metadata = {
-  title: 'ㅇㄱㄱ - AI 피부 분석 서비스',
-  description: 'AI 기반 얼굴 피부 분석 및 맞춤 제품 추천 서비스',
+  metadataBase: new URL('https://ggap.ai'),
+  title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+  description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+  openGraph: {
+    title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    url: 'https://ggap.ai',
+    siteName: 'ㅇㄱㄱ',
+    images: [{ url: '/og/banner.png', width: 1200, height: 630, alt: 'ㅇㄱㄱ - 얼굴값 췍!' }],
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    images: ['/og/banner.png'],
+  },
 }
 
 export default function RootLayout({

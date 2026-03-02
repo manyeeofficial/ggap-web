@@ -29,7 +29,7 @@ export default function SplashPage() {
           <Image src={logo} alt="로고" height={100} className="invert" />
         </h1>
         <p className="text-white/100 text-2xl">
-          당신의 진짜 얼굴값을<br/>확인하는 시간
+          얼굴값 췍!<br/>상위 몇 %인지 궁금하다면?
         </p>
       </motion.div>
     </div>
