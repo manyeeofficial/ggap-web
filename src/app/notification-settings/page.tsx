@@ -8,6 +8,7 @@ import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { notificationApi } from '@/lib/api'
+import { UnauthenticatedError } from '@/lib/api/client'
 import type { NotificationSetting } from '@/lib/types'
 
 export default function NotificationSettingsPage() {
@@ -25,7 +26,8 @@ export default function NotificationSettingsPage() {
       try {
         const data = await notificationApi.get()
         setNotifications(data)
-      } catch {
+      } catch (err) {
+        if (err instanceof UnauthenticatedError) return
         toast.error('알림 설정을 불러오는데 실패했습니다.')
       } finally {
         setIsLoaded(true)

@@ -6,6 +6,7 @@ import { ArrowLeft, Pin, ChevronRight } from 'lucide-react'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { toast } from 'sonner'
 import { noticeApi } from '@/lib/api'
+import { UnauthenticatedError } from '@/lib/api/client'
 import type { Notice } from '@/lib/types'
 
 function isNew(createdAt: string): boolean {
@@ -33,7 +34,8 @@ export default function NoticesPage() {
       try {
         const data = await noticeApi.list()
         setNotices(data)
-      } catch {
+      } catch (err) {
+        if (err instanceof UnauthenticatedError) return
         toast.error('공지사항을 불러오는데 실패했습니다.')
       } finally {
         setIsLoaded(true)

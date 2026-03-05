@@ -1,6 +1,13 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
 import type { ApiResponse } from '@/lib/types'
 
+export class UnauthenticatedError extends Error {
+  constructor() {
+    super('unauthenticated')
+    this.name = 'UnauthenticatedError'
+  }
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 function getCookie(name: string): string | null {
@@ -11,6 +18,15 @@ function getCookie(name: string): string | null {
     return parts.pop()?.split(';').shift() || null
   }
   return null
+}
+
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 < Date.now() + 30 * 1000
+  } catch {
+    return true
+  }
 }
 
 function setCookie(name: string, value: string, maxAgeSeconds: number) {
@@ -37,13 +53,27 @@ class ApiClient {
       withCredentials: true,
     })
 
-    // Request interceptor - 쿠키의 accessToken을 Authorization 헤더에 추가
+    // Request interceptor - 토큰 사전 확인 후 Authorization 헤더 추가
     this.client.interceptors.request.use(
       (config) => {
-        const token = getCookie('Authorization')
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
+        const accessToken = getCookie('Authorization')
+        const refreshToken = getCookie('Refresh-token')
+
+        // 로그인 여부 확인용 엔드포인트는 토큰 없이도 통과
+        const isAuthCheckUrl = config.url === '/member' && config.method === 'get'
+        if (!isAuthCheckUrl && !accessToken && !refreshToken) {
+          this.redirectToLogin()
+          return Promise.reject(new UnauthenticatedError())
         }
+
+        if (accessToken && !isTokenExpired(accessToken)) {
+          config.headers.Authorization = `Bearer ${accessToken}`
+        } else if (accessToken) {
+          // 만료된 accessToken이라도 헤더에 담아 보내면
+          // response interceptor가 refresh 후 재시도
+          config.headers.Authorization = `Bearer ${accessToken}`
+        }
+
         return config
       },
       (error) => Promise.reject(error)

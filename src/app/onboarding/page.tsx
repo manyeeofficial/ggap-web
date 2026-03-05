@@ -36,14 +36,14 @@ export default function OnboardingPage() {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1)
     } else {
-      router.push('/login')
+      router.push('/')
     }
   }
 
   return (
     <div className="h-full bg-white flex flex-col">
       <div className="p-6 flex justify-end">
-        <Button variant="ghost" onClick={() => router.push('/login')} className="text-gray-500">
+        <Button variant="ghost" onClick={() => router.push('/')} className="text-gray-500">
           건너뛰기
         </Button>
       </div>

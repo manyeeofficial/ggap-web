@@ -14,6 +14,7 @@ import {
 } from '@/app/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { skinAnalysisApi } from '@/lib/api'
+import { UnauthenticatedError } from '@/lib/api/client'
 import type { SkinAnalysis, SkinType, TroubleType } from '@/lib/types'
 
 const SKIN_TYPE_LABEL: Record<SkinType, string> = {
@@ -92,6 +93,7 @@ export default function HistoryPage() {
         setAnalyses(data.filter((a) => a.status === 'COMPLETED'))
       })
       .catch((err) => {
+        if (err instanceof UnauthenticatedError) return
         console.error('Failed to load history:', err)
         toast.error('분석 기록을 불러오는 데 실패했습니다.')
       })
