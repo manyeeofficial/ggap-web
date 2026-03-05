@@ -65,7 +65,7 @@ export default function SettingsPage() {
       await memberApi.logout()
     } finally {
       clearMember()
-      router.push('/login')
+      router.push('/')
     }
   }
 

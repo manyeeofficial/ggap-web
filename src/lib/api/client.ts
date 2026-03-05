@@ -34,6 +34,27 @@ function setCookie(name: string, value: string, maxAgeSeconds: number) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
 }
 
+// 인증 없이 호출 가능한 공개 API 패턴
+const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
+  { url: /^\/member$/, method: 'get' },          // 로그인 여부 확인
+  { url: /^\/member$/, method: 'post' },          // 회원가입
+  { url: /^\/member\/login$/ },                   // 로그인
+  { url: /^\/member\/refresh-token$/ },           // 토큰 갱신
+  { url: /^\/member\/verification-code/ },        // 전화번호 인증
+  { url: /^\/apple-auth\// },                     // Apple 인증
+  { url: /^\/kakao-auth\// },                     // Kakao 인증
+  { url: /^\/naver-auth\// },                     // Naver 인증
+]
+
+function isPublicApiUrl(url?: string, method?: string): boolean {
+  if (!url) return false
+  return PUBLIC_API_PATTERNS.some(
+    (pattern) =>
+      pattern.url.test(url) &&
+      (pattern.method == null || pattern.method === method?.toLowerCase())
+  )
+}
+
 interface RefreshTokenResponse {
   accessToken: string
   refreshToken: string
@@ -59,9 +80,7 @@ class ApiClient {
         const accessToken = getCookie('Authorization')
         const refreshToken = getCookie('Refresh-token')
 
-        // 로그인 여부 확인용 엔드포인트는 토큰 없이도 통과
-        const isAuthCheckUrl = config.url === '/member' && config.method === 'get'
-        if (!isAuthCheckUrl && !accessToken && !refreshToken) {
+        if (!accessToken && !refreshToken && !isPublicApiUrl(config.url, config.method)) {
           this.redirectToLogin()
           return Promise.reject(new UnauthenticatedError())
         }
