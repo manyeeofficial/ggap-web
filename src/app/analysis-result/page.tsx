@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
 import { Progress } from '@/app/components/ui/progress'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
-import { ArrowLeft, Camera, Share2, Sparkles, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Camera, Share2, Sparkles, AlertCircle, Download } from 'lucide-react'
 import { skinAnalysisApi } from '@/lib/api'
 import type { SkinAnalysis, TroubleType, Severity } from '@/lib/types'
+import { toast } from 'sonner'
 
 const SKIN_TYPE_MAP: Record<string, { type: string; icon: string }> = {
   OILY: { type: '지성', icon: '💧' },
@@ -53,6 +54,43 @@ function AnalysisResultContent() {
   const [analysis, setAnalysis] = useState<SkinAnalysis | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSharing, setIsSharing] = useState(false)
+  const shareCardRef = useRef<HTMLDivElement>(null)
+
+  const handleShare = async () => {
+    if (!shareCardRef.current || !analysis) return
+    setIsSharing(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(shareCardRef.current, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+      })
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return
+        const file = new File([blob], 'ggap-face-value.png', { type: 'image/png' })
+
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: '나의 얼굴값 공개 🔥' })
+        } else {
+          // Web Share API 미지원 시 이미지 다운로드 fallback
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'ggap-face-value.png'
+          a.click()
+          URL.revokeObjectURL(url)
+          toast.success('이미지가 저장되었습니다.')
+        }
+      }, 'image/png')
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') toast.error('공유에 실패했습니다.')
+    } finally {
+      setIsSharing(false)
+    }
+  }
 
   useEffect(() => {
     if (!id) {
@@ -140,6 +178,50 @@ function AnalysisResultContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 공유용 캡처 카드 (화면 밖 렌더링) */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden>
+        <div
+          ref={shareCardRef}
+          style={{ width: 390, fontFamily: 'sans-serif' }}
+          className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 flex flex-col items-center gap-6"
+        >
+          {/* 사진 */}
+          {analysis.imageUrl ? (
+            <div className="w-36 h-36 rounded-3xl overflow-hidden ring-4 ring-white/30 flex-shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={analysis.imageUrl} alt="" className="w-full h-full object-cover object-center" crossOrigin="anonymous" />
+            </div>
+          ) : (
+            <div className="w-36 h-36 rounded-3xl bg-white/10 flex items-center justify-center text-6xl">👤</div>
+          )}
+
+          {/* 얼굴값 */}
+          <div className="text-center text-white">
+            <p className="text-sm text-white/60 mb-1">내 얼굴값</p>
+            <p className="text-5xl font-bold tracking-tight">
+              {analysis.totalFaceValue?.toLocaleString()}
+              <span className="text-2xl font-semibold ml-1">원</span>
+            </p>
+          </div>
+
+          {/* 배지 */}
+          <div className="flex gap-2 flex-wrap justify-center">
+            {skinTypeInfo && (
+              <span className="px-3 py-1 bg-white/20 rounded-full text-white text-sm font-semibold">
+                {skinTypeInfo.icon} {skinTypeInfo.type}
+              </span>
+            )}
+            {analysis.estimatedSkinAge != null && (
+              <span className="px-3 py-1 bg-white/20 rounded-full text-white text-sm font-semibold">
+                피부나이 {analysis.estimatedSkinAge}세
+              </span>
+            )}
+          </div>
+
+          {/* 브랜딩 */}
+          <p className="text-white/40 text-xs mt-2">ggap.ai · 얼굴값 췍! 🔥</p>
+        </div>
+      </div>
       {/* 헤더 */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="relative flex items-center justify-center h-14 px-4">
@@ -150,8 +232,15 @@ function AnalysisResultContent() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-semibold">분석 결과</h1>
-          <button className="absolute right-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-            <Share2 className="w-5 h-5 text-gray-600" />
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="absolute right-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+          >
+            {isSharing
+              ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              : <Share2 className="w-5 h-5 text-gray-600" />
+            }
           </button>
         </div>
       </div>
