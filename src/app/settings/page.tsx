@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog'
 import { memberApi } from '@/lib/api'
+import { deleteCookies } from '@/lib/api/client'
 import { useMemberStore } from '@/lib/store/member-store'
 
 const settingsSections = [
@@ -64,6 +65,7 @@ export default function SettingsPage() {
     try {
       await memberApi.logout()
     } finally {
+      deleteCookies()
       clearMember()
       router.push('/')
     }
@@ -171,6 +173,7 @@ export default function SettingsPage() {
                     try {
                       await memberApi.withdraw()
                     } finally {
+                      deleteCookies()
                       clearMember()
                       router.push('/login')
                     }

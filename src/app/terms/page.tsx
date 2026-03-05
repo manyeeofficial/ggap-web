@@ -1,98 +1,21 @@
-'use client'
+import fs from 'fs'
+import path from 'path'
+import type { Metadata } from 'next'
+import LegalPage from '@/app/components/LegalPage'
+import LegalHeader from '@/app/components/LegalHeader'
 
-import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+export const metadata: Metadata = {
+  title: '이용약관 | 077.co.kr',
+}
 
 export default function TermsPage() {
-  const router = useRouter()
+  const filePath = path.join(process.cwd(), 'src/content/legal/terms.md')
+  const content = fs.readFileSync(filePath, 'utf8')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="p-2 flex items-center justify-between">
-          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-lg font-semibold">이용약관</h1>
-          <div className="w-10"></div>
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="bg-white rounded-lg prose prose-sm max-w-none">
-          <h2>제1조 (목적)</h2>
-          <p>
-            본 약관은 ㅇㄱㄱ(이하 "회사")이 제공하는 AI 기반 얼굴 분석 뷰티 추천 서비스(이하 "서비스")의
-            이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
-          </p>
-
-          <h2>제2조 (정의)</h2>
-          <p>본 약관에서 사용하는 용어의 정의는 다음과 같습니다.</p>
-          <ol>
-            <li>"서비스"란 회사가 제공하는 AI 기반 얼굴 분석 및 뷰티 제품/시술 추천 서비스를 말합니다.</li>
-            <li>"회원"이란 본 약관에 동의하고 회사와 서비스 이용계약을 체결한 자를 말합니다.</li>
-            <li>"분석"이란 회원이 제공한 얼굴 이미지를 AI가 분석하여 피부 상태를 평가하는 것을 말합니다.</li>
-            <li>"구독"이란 유료 결제를 통해 프리미엄 서비스를 이용하는 것을 말합니다.</li>
-          </ol>
-
-          <h2>제3조 (약관의 효력 및 변경)</h2>
-          <p>
-            본 약관은 서비스를 이용하고자 하는 모든 회원에 대하여 그 효력을 발생합니다.
-            회사는 필요한 경우 관련 법령을 위배하지 않는 범위에서 본 약관을 변경할 수 있습니다.
-          </p>
-
-          <h2>제4조 (서비스의 제공 및 변경)</h2>
-          <p>회사는 다음과 같은 서비스를 제공합니다.</p>
-          <ol>
-            <li>얼굴 이미지 분석 서비스</li>
-            <li>피부 타입 및 상태 진단</li>
-            <li>맞춤형 제품 및 시술 추천</li>
-            <li>분석 기록 관리</li>
-            <li>기타 회사가 정하는 서비스</li>
-          </ol>
-
-          <h2>제5조 (회원가입)</h2>
-          <p>
-            회원가입은 이용자가 약관의 내용에 동의하고 회사가 정한 가입 양식에 따라
-            회원정보를 기입한 후 회사가 이를 승인함으로써 완료됩니다.
-          </p>
-
-          <h2>제6조 (개인정보 보호)</h2>
-          <p>
-            회사는 관련 법령이 정하는 바에 따라 회원의 개인정보를 보호하기 위해 노력합니다.
-            개인정보의 보호 및 이용에 대해서는 관련 법령 및 회사의 개인정보처리방침이 적용됩니다.
-          </p>
-
-          <h2>제7조 (유료서비스)</h2>
-          <p>
-            회사는 일부 서비스를 유료로 제공할 수 있으며, 유료서비스를 이용하고자 하는 회원은
-            회사가 정한 요금을 지불해야 합니다.
-          </p>
-
-          <h2>제8조 (환불 정책)</h2>
-          <p>
-            구독 서비스의 환불은 관련 법령 및 회사의 환불 정책에 따릅니다.
-            무료 체험 기간 중에는 언제든지 취소 가능하며, 유료 구독 후 7일 이내 환불 요청 시 전액 환불됩니다.
-          </p>
-
-          <h2>제9조 (면책조항)</h2>
-          <p>
-            본 서비스는 뷰티 추천 목적으로 제공되며 의료 진단이 아닙니다.
-            심각한 피부 문제가 있는 경우 반드시 전문의와 상담하시기 바랍니다.
-          </p>
-
-          <h2>제10조 (준거법 및 관할법원)</h2>
-          <p>
-            본 약관은 대한민국 법령에 의하여 규정되고 이행되며, 서비스 이용과 관련하여 회사와 회원 간에
-            발생한 분쟁에 대해서는 민사소송법상의 관할법원에 소를 제기할 수 있습니다.
-          </p>
-
-          <p className="mt-8 text-gray-500">
-            <strong>시행일:</strong> 2026년 2월 9일
-          </p>
-        </div>
-      </div>
-    </div>
+    <>
+      <LegalHeader title="이용약관" />
+      <LegalPage title="이용약관" content={content} />
+    </>
   )
 }

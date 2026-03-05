@@ -34,6 +34,12 @@ function setCookie(name: string, value: string, maxAgeSeconds: number) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
 }
 
+export function deleteCookies() {
+  if (typeof document === 'undefined') return
+  document.cookie = 'Authorization=; path=/; max-age=0; samesite=lax'
+  document.cookie = 'Refresh-token=; path=/; max-age=0; samesite=lax'
+}
+
 // 인증 없이 호출 가능한 공개 API 패턴
 const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
   { url: /^\/member$/, method: 'get' },          // 로그인 여부 확인
