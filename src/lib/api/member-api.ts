@@ -94,6 +94,16 @@ export const memberApi = {
     return response.data
   },
 
+  // 프로필 이미지 수정
+  async updateProfileImage(file: File): Promise<Member> {
+    const formData = new FormData()
+    formData.append('image', file)
+    const response = await axiosInstance.patch<Member>('/member/profile-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
   // 회원탈퇴
   async withdraw(): Promise<void> {
     await axiosInstance.delete('/member/withdrawal')

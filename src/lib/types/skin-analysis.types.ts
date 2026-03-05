@@ -5,6 +5,7 @@ export interface SkinAnalysisStatus {
   id: number
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
   errorMessage?: string
+  imageUrl?: string
 }
 
 export interface SkinAnalysis {

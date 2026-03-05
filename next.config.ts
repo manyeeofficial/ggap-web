@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: '**', pathname: '/**' },
     ],
-    unoptimized: true,
   },
   compress: true,
   poweredByHeader: false,

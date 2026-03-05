@@ -71,6 +71,9 @@ export interface Member {
   nickname: string
   emailAddress: string
   phoneNumber: string
+  profileImage?: string
+  birthYear?: number
+  gender?: 'MALE' | 'FEMALE' | 'OTHER'
 }
 
 export interface MemberUpdateRequest {
@@ -78,4 +81,6 @@ export interface MemberUpdateRequest {
   phoneNumber?: string
   emailAddress: string
   password: string
+  birthYear?: number
+  gender?: 'MALE' | 'FEMALE' | 'OTHER'
 }

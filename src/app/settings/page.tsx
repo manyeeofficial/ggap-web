@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Avatar, AvatarFallback } from '@/app/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { ChevronRight, User, Sparkles, Bell, Globe, HelpCircle, FileText, LogOut, UserX } from 'lucide-react'
 import {
   AlertDialog,
@@ -75,6 +75,7 @@ export default function SettingsPage() {
       <div className="px-5 pt-8 pb-6 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-b border-gray-100">
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
+            {member?.profileImage && <AvatarImage src={member.profileImage} alt="프로필 이미지" className="object-cover" />}
             <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-xl font-bold">
               {member?.nickname?.[0] ?? '?'}
             </AvatarFallback>

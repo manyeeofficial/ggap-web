@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
+import Image from 'next/image'
 import { MoreVertical, Trash2, Camera } from 'lucide-react'
 import {
   DropdownMenu,
@@ -209,10 +210,13 @@ export default function HistoryPage() {
                       {/* 썸네일 */}
                       {item.imageUrl ? (
                         <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                          <img
+                          <Image
                             src={item.imageUrl}
                             alt="분석 사진"
+                            width={60}
+                            height={60}
                             className="w-full h-full object-cover"
+                            quality={70}
                           />
                         </div>
                       ) : (

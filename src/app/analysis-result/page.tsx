@@ -6,6 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
 import { Progress } from '@/app/components/ui/progress'
 import { Skeleton } from '@/app/components/ui/skeleton'
+import Image from 'next/image'
 import { ArrowLeft, Camera, Share2, Sparkles, AlertCircle } from 'lucide-react'
 import { skinAnalysisApi } from '@/lib/api'
 import type { SkinAnalysis, TroubleType, Severity } from '@/lib/types'
@@ -157,28 +158,45 @@ function AnalysisResultContent() {
 
       {/* 히어로 배너 */}
       {analysis.totalFaceValue != null && (
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-6 py-6">
-          <div className="flex items-center gap-5">
+        <div className="relative">
+          {/* 이미지 영역 */}
+          <div className="relative w-full h-80 bg-gradient-to-br from-indigo-900 to-purple-900 overflow-hidden">
             {analysis.imageUrl ? (
-              <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 ring-2 ring-white/20">
-                <img src={analysis.imageUrl} alt="분석 사진" className="w-full h-full object-cover" />
-              </div>
+              <Image
+                src={analysis.imageUrl}
+                alt="분석 사진"
+                fill
+                className="object-cover object-center"
+                quality={90}
+                sizes="100vw"
+              />
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center flex-shrink-0 text-4xl">
-                👤
-              </div>
+              <div className="w-full h-full flex items-center justify-center text-8xl">👤</div>
             )}
-            <div className="text-white">
-              <p className="text-sm text-white/70 mb-0.5">내 얼굴값</p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-bold">{analysis.totalFaceValue.toLocaleString()}</span>
-                <span className="text-lg">원</span>
-              </div>
-              {skinTypeInfo && (
-                <span className="inline-block mt-1.5 px-2.5 py-0.5 bg-white/15 rounded-full text-xs font-medium">
-                  {skinTypeInfo.icon} {skinTypeInfo.type}
+            {/* 하단 그라디언트 오버레이 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+            {/* 오버레이 텍스트 */}
+            <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 text-white">
+              <p className="text-sm text-white/70 mb-1">내 얼굴값</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold tracking-tight">
+                  {analysis.totalFaceValue.toLocaleString()}
                 </span>
-              )}
+                <span className="text-xl font-medium">원</span>
+              </div>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {skinTypeInfo && (
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold">
+                    {skinTypeInfo.icon} {skinTypeInfo.type}
+                  </span>
+                )}
+                {analysis.estimatedSkinAge != null && (
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold">
+                    피부나이 {analysis.estimatedSkinAge}세
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
