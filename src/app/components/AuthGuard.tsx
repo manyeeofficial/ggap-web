@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
 
-const PUBLIC_PATHS = ['/', '/splash', '/onboarding', '/login', '/forgot-password', '/register', '/mypage/apple-callback', '/auth/naver', '/auth/kakao']
+const PUBLIC_PATHS = ['/', '/onboarding', '/login', '/forgot-password', '/register', '/mypage/apple-callback', '/auth/naver', '/auth/kakao']
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
