@@ -163,6 +163,13 @@ function LoginContent() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
 
+          {/* 히어로 문구 */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">
+              로그인하고 <span className="text-indigo-600">얼굴값 췍! 🔥</span>
+            </h1>
+          </div>
+
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
             {/* <Button
