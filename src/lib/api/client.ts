@@ -40,6 +40,7 @@ const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
   { url: /^\/member$/, method: 'post' },          // 회원가입
   { url: /^\/member\/login$/ },                   // 로그인
   { url: /^\/member\/refresh-token$/ },           // 토큰 갱신
+  { url: /^\/member\/check-duplicate$/, method: 'get' }, // 중복 확인
   { url: /^\/member\/verification-code/ },        // 전화번호 인증
   { url: /^\/apple-auth\// },                     // Apple 인증
   { url: /^\/kakao-auth\// },                     // Kakao 인증

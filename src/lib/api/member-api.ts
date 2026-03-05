@@ -17,6 +17,14 @@ export const memberApi = {
     return response.data
   },
 
+  // 이메일/전화번호 중복 확인
+  async checkDuplicate(emailAddress: string, phoneNumber: string): Promise<{ emailExists: boolean; phoneExists: boolean }> {
+    const response = await axiosInstance.get('/member/check-duplicate', {
+      params: { emailAddress, phoneNumber },
+    })
+    return response.data
+  },
+
   // 회원가입
   async signup(data: SignupRequest): Promise<string> {
     const response = await axiosInstance.post<string>('/member', data)

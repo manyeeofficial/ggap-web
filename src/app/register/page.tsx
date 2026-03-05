@@ -34,7 +34,27 @@ export default function RegisterPage() {
         toast.error('올바른 이메일을 입력해주세요.')
         return
       }
-      setStep(2)
+
+      setIsLoading(true)
+      try {
+        const { emailExists, phoneExists } = await memberApi.checkDuplicate(
+          email.trim(),
+          phoneNumber || ''
+        )
+        if (emailExists) {
+          toast.error('이미 사용 중인 이메일입니다.')
+          return
+        }
+        if (phoneNumber && phoneExists) {
+          toast.error('이미 사용 중인 휴대전화번호입니다.')
+          return
+        }
+        setStep(2)
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || '중복 확인에 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     } else if (step === 2) {
       if (password.length < 8) {
         toast.error('비밀번호는 8자 이상이어야 합니다.')
