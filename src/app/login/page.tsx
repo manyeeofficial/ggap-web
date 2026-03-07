@@ -141,11 +141,11 @@ function LoginContent() {
             </div>
             <div className="flex items-center space-x-2 pl-4">
               <Checkbox id="appleAgreeTerms" checked={agreeTerms} onCheckedChange={(v) => setAgreeTerms(!!v)} />
-              <label htmlFor="appleAgreeTerms" className="text-sm">(필수) 이용약관 동의</label>
+              <label htmlFor="appleAgreeTerms" className="text-sm">(필수) <a href="/terms" target="_blank" className="underline text-indigo-600">이용약관</a> 동의</label>
             </div>
             <div className="flex items-center space-x-2 pl-4">
               <Checkbox id="appleAgreePrivacy" checked={agreePrivacy} onCheckedChange={(v) => setAgreePrivacy(!!v)} />
-              <label htmlFor="appleAgreePrivacy" className="text-sm">(필수) 개인정보 처리방침 동의</label>
+              <label htmlFor="appleAgreePrivacy" className="text-sm">(필수) <a href="/privacy" target="_blank" className="underline text-indigo-600">개인정보 처리방침</a> 동의</label>
             </div>
             <div className="flex items-center space-x-2 pl-4">
               <Checkbox id="appleAgreeMarketing" checked={agreeMarketing} onCheckedChange={(v) => setAgreeMarketing(!!v)} />
