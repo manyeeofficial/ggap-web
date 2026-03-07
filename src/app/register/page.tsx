@@ -81,6 +81,7 @@ export default function RegisterPage() {
           birthYear: birthYear ? parseInt(birthYear) : undefined,
           gender: gender || undefined,
           mobileCarrier: mobileCarrier || undefined,
+          agreeMarketing,
         }
 
         await memberApi.signup(signupData)

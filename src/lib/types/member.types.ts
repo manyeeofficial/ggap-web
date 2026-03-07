@@ -16,6 +16,7 @@ export interface SignupRequest {
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
   mobileCarrier?: MobileCarrier
+  agreeMarketing?: boolean
 }
 
 export interface VerificationCodeRequest {
@@ -47,6 +48,7 @@ export interface AppleAuthSession {
 export interface AppleCompleteSignupRequest {
   tempToken: string
   phoneNumber: string
+  agreeMarketing?: boolean
 }
 
 // 소셜 로그인 콜백 응답 (Kakao / Naver)
@@ -65,6 +67,7 @@ export interface SocialCompleteSignupRequest {
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
   naverAccessToken?: string
+  agreeMarketing?: boolean
 }
 
 export interface Member {
