@@ -190,7 +190,7 @@ function LoginContent() {
 
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
-            {/* <Button
+            <Button
               onClick={() => handleSocialLogin('kakao')}
               className="w-full h-12 bg-[#FEE500] hover:bg-[#FDD835] text-gray-900"
             >
@@ -198,7 +198,7 @@ function LoginContent() {
                 <path d="M12 3C6.48 3 2 6.58 2 11c0 2.89 1.86 5.43 4.68 7.07l-1.23 4.47c-.07.27.18.5.44.4l5.42-2.35c.89.13 1.8.2 2.69.2 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
               </svg>
               카카오톡으로 로그인
-            </Button> */}
+            </Button>
 
             <Button
               onClick={() => handleSocialLogin('naver')}

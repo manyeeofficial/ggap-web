@@ -21,6 +21,9 @@ function KakaoCallbackContent() {
   const [tempToken, setTempToken] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [phoneFromKakao, setPhoneFromKakao] = useState(false)
+  const [nickname, setNickname] = useState('')
+  const [profileImageUrl, setProfileImageUrl] = useState('')
   const [mobileCarrier, setMobileCarrier] = useState<MobileCarrier | ''>('')
   const [birthYear, setBirthYear] = useState('')
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | ''>('')
@@ -53,6 +56,14 @@ function KakaoCallbackContent() {
         if (result.requiresPhoneNumber) {
           setTempToken(result.tempToken!)
           setEmail(result.email!)
+          if (result.phoneNumber) {
+            setPhoneNumber(result.phoneNumber)
+            setPhoneFromKakao(true)
+          }
+          if (result.nickname) setNickname(result.nickname)
+          if (result.profileImageUrl) setProfileImageUrl(result.profileImageUrl)
+          if (result.gender) setGender(result.gender)
+          if (result.birthYear) setBirthYear(String(result.birthYear))
           setStatus('phone')
         } else {
           await fetchMember()
@@ -76,6 +87,8 @@ function KakaoCallbackContent() {
         birthYear: birthYear ? parseInt(birthYear) : undefined,
         gender: gender || undefined,
         agreeMarketing,
+        nickname: nickname || undefined,
+        profileImageUrl: profileImageUrl || undefined,
       })
       await fetchMember()
       toast.success('카카오 회원가입이 완료되었습니다.')
@@ -116,7 +129,9 @@ function KakaoCallbackContent() {
         </div>
 
         <div>
-          <Label htmlFor="phoneNumber">휴대전화번호 <span className="text-red-500">*</span></Label>
+          <Label htmlFor="phoneNumber">
+            휴대전화번호 <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="phoneNumber"
             type="tel"
@@ -125,37 +140,42 @@ function KakaoCallbackContent() {
             onChange={(e) => setPhoneNumber(e.target.value)}
             className="mt-2 h-12"
             required
-            disabled={isLoading}
+            disabled={isLoading || phoneFromKakao}
           />
+          {phoneFromKakao && (
+            <p className="text-xs text-muted-foreground mt-1">카카오 계정에서 가져온 번호입니다.</p>
+          )}
         </div>
 
-        <div>
-          <Label>이동통신사</Label>
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {[
-              { label: 'SKT', value: 'SKT' as const },
-              { label: 'KT', value: 'KT' as const },
-              { label: 'LGU+', value: 'LGU' as const },
-              { label: 'SKT 알뜰폰', value: 'SKT_MVNO' as const },
-              { label: 'KT 알뜰폰', value: 'KT_MVNO' as const },
-              { label: 'LGU+ 알뜰폰', value: 'LGU_MVNO' as const },
-            ].map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setMobileCarrier(c.value)}
-                className={`h-12 rounded-md border-2 text-sm transition-colors ${
-                  mobileCarrier === c.value
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                disabled={isLoading}
-              >
-                {c.label}
-              </button>
-            ))}
+        {!phoneFromKakao && (
+          <div>
+            <Label>이동통신사</Label>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[
+                { label: 'SKT', value: 'SKT' as const },
+                { label: 'KT', value: 'KT' as const },
+                { label: 'LGU+', value: 'LGU' as const },
+                { label: 'SKT 알뜰폰', value: 'SKT_MVNO' as const },
+                { label: 'KT 알뜰폰', value: 'KT_MVNO' as const },
+                { label: 'LGU+ 알뜰폰', value: 'LGU_MVNO' as const },
+              ].map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setMobileCarrier(c.value)}
+                  className={`h-12 rounded-md border-2 text-sm transition-colors ${
+                    mobileCarrier === c.value
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  disabled={isLoading}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <Label htmlFor="birthYear">출생년도</Label>
