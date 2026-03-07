@@ -25,11 +25,11 @@ function NaverCallbackContent() {
   const [birthYear, setBirthYear] = useState('')
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | ''>('')
   const [naverAccessToken, setNaverAccessToken] = useState('')
+  const [profileImageUrl, setProfileImageUrl] = useState('')
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [agreeMarketing, setAgreeMarketing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
   const hasProcessed = useRef(false)
 
   const agreeAll = agreeTerms && agreePrivacy && agreeMarketing
@@ -57,6 +57,7 @@ function NaverCallbackContent() {
           setTempToken(result.tempToken!)
           setEmail(result.email!)
           setNaverAccessToken(result.naverAccessToken ?? '')
+          setProfileImageUrl(result.profileImageUrl ?? '')
           setStatus('phone')
         } else {
           await fetchMember()
@@ -71,7 +72,6 @@ function NaverCallbackContent() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCompleteSignup = async () => {
-    setError('')
     setIsLoading(true)
     try {
       await memberApi.naverCompleteSignup({
@@ -82,12 +82,13 @@ function NaverCallbackContent() {
         gender: gender || undefined,
         naverAccessToken: naverAccessToken || undefined,
         agreeMarketing,
+        profileImageUrl: profileImageUrl || undefined,
       })
       await fetchMember()
       toast.success('네이버 회원가입이 완료되었습니다.')
       router.replace('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || '회원가입에 실패했습니다.')
+      toast.error(err.response?.data?.message || '회원가입에 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -120,12 +121,6 @@ function NaverCallbackContent() {
             연결된 이메일: <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
 
         <div>
           <Label htmlFor="phoneNumber">휴대전화번호 <span className="text-red-500">*</span></Label>

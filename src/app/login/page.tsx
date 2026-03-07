@@ -21,7 +21,6 @@ function LoginContent() {
   const { fetchMember } = useMemberStore()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   // Apple 신규 회원 — 전화번호 입력 상태
@@ -50,7 +49,6 @@ function LoginContent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setIsLoading(true)
 
     try {
@@ -60,8 +58,7 @@ function LoginContent() {
       await memberApi.login(loginData)
       router.push('/')
     } catch (err: any) {
-      console.error('Login error:', err)
-      setError(err.response?.data?.message || '로그인에 실패했습니다.')
+      toast.error(err.response?.data?.message || '로그인에 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -70,7 +67,6 @@ function LoginContent() {
   const handleAppleSignupComplete = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!appleSignup) return
-    setError('')
     setIsLoading(true)
 
     try {
@@ -83,14 +79,13 @@ function LoginContent() {
       toast.success('Apple 회원가입이 완료되었습니다.')
       router.push('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Apple 회원가입에 실패했습니다.')
+      toast.error(err.response?.data?.message || 'Apple 회원가입에 실패했습니다.')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleSocialLogin = async (provider: 'kakao' | 'naver' | 'apple') => {
-    setError('')
     try {
       let authUrl: string
       if (provider === 'kakao') {
@@ -102,9 +97,8 @@ function LoginContent() {
       }
       window.location.href = authUrl
     } catch (err: any) {
-      console.error(`${provider} login error:`, err)
       const names: Record<string, string> = { kakao: '카카오', naver: '네이버', apple: 'Apple' }
-      setError(`${names[provider]} 로그인에 실패했습니다.`)
+      toast.error(`${names[provider]} 로그인에 실패했습니다.`)
     }
   }
 
@@ -125,12 +119,6 @@ function LoginContent() {
               연결된 이메일: <span className="font-medium text-foreground">{appleSignup.email}</span>
             </p>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
 
           <div>
             <Label htmlFor="phoneNumber">휴대전화번호</Label>
@@ -247,12 +235,6 @@ function LoginContent() {
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
             <div>
               <Label htmlFor="identifier">이메일 또는 휴대전화번호</Label>
               <Input

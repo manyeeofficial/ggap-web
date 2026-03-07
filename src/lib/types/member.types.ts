@@ -57,6 +57,7 @@ export interface SocialCallbackResponse {
   tempToken?: string
   email?: string
   naverAccessToken?: string
+  profileImageUrl?: string
 }
 
 // 소셜 회원가입 완료 요청
@@ -68,6 +69,7 @@ export interface SocialCompleteSignupRequest {
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
   naverAccessToken?: string
   agreeMarketing?: boolean
+  profileImageUrl?: string
 }
 
 export interface Member {
