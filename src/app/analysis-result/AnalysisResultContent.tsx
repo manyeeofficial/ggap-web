@@ -9,8 +9,27 @@ import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
 import { ArrowLeft, Camera, Share2, Sparkles, AlertCircle } from 'lucide-react'
 import { skinAnalysisApi } from '@/lib/api'
-import type { SkinAnalysis, TroubleType, Severity } from '@/lib/types'
+import type { SkinAnalysis, TroubleType, Severity, PersonalColor } from '@/lib/types'
 import { toast } from 'sonner'
+
+const PERSONAL_COLOR_MAP: Record<PersonalColor, { displayName: string; season: string; bgColor: string; textColor: string }> = {
+  SPRING_PALE:   { displayName: '봄 페일',   season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
+  SPRING_LIGHT:  { displayName: '봄 라이트', season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
+  SPRING_BRIGHT: { displayName: '봄 브라이트', season: '봄', bgColor: 'bg-yellow-50', textColor: 'text-yellow-700' },
+  SPRING_TRUE:   { displayName: '봄 트루',   season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
+  SUMMER_PALE:   { displayName: '여름 페일', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
+  SUMMER_LIGHT:  { displayName: '여름 라이트', season: '여름', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  SUMMER_MUTE:   { displayName: '여름 뮤트', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
+  SUMMER_TRUE:   { displayName: '여름 트루', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
+  AUTUMN_SOFT:   { displayName: '가을 소프트', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  AUTUMN_MUTE:   { displayName: '가을 뮤트', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  AUTUMN_DEEP:   { displayName: '가을 딥',   season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  AUTUMN_TRUE:   { displayName: '가을 트루', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  WINTER_BRIGHT: { displayName: '겨울 브라이트', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  WINTER_DEEP:   { displayName: '겨울 딥',   season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  WINTER_TRUE:   { displayName: '겨울 트루', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  WINTER_PALE:   { displayName: '겨울 페일', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+}
 
 const SKIN_TYPE_MAP: Record<string, { type: string; icon: string }> = {
   OILY: { type: '지성', icon: '💧' },
@@ -412,6 +431,18 @@ export default function AnalysisResultContent() {
                 </div>
               </div>
             )}
+            {analysis.personalColor && (() => {
+              const pc = PERSONAL_COLOR_MAP[analysis.personalColor!]
+              return (
+                <div className={`rounded-2xl p-5 ${pc.bgColor}`}>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">퍼스널 컬러</p>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-2xl font-bold ${pc.textColor}`}>{pc.displayName}</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-white/70 ${pc.textColor}`}>{pc.season}톤</span>
+                  </div>
+                </div>
+              )
+            })()}
             {analysis.aiSummary && (
               <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-3">
