@@ -37,6 +37,7 @@ export function BottomNavWrapper({ children }: { children: ReactNode }) {
           <p>통신판매신고: 제2023-서울강남-05683호</p>
           <p>주소: 서울시 강남구 논현로2길 60, 2층 2252호</p>
           <p>이메일: manyee.official@gmail.com</p>
+          <p>연락처: 02-423-5314</p>
         </footer>
       </div>
 
