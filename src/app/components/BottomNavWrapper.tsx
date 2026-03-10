@@ -31,6 +31,13 @@ export function BottomNavWrapper({ children }: { children: ReactNode }) {
     <div className="h-dvh bg-gray-50 flex flex-col max-w-[430px] mx-auto">
       <div className={`flex-1 overflow-auto ${showBottomNav ? 'pb-20' : ''}`}>
         {children}
+        <footer className="px-5 py-6 text-[10px] text-gray-400 leading-relaxed">
+          <p>상호: 마니 | 대표: 신민준</p>
+          <p>사업자번호: 397-46-01084</p>
+          <p>통신판매신고: 제2023-서울강남-05683호</p>
+          <p>주소: 서울시 강남구 논현로2길 60, 2층 2252호</p>
+          <p>이메일: manyee.official@gmail.com</p>
+        </footer>
       </div>
 
       {showBottomNav && (
