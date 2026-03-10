@@ -82,7 +82,7 @@ export default function HomePage() {
   }, [isLoaded, member])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       {/* Hero */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-8">
         <h1 className="text-2xl font-bold text-white mb-1">ㅇㄱㄱ - 얼굴값 분석</h1>
