@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
+import { deleteCookies } from '@/lib/api/client'
 
 const PUBLIC_PATHS = ['/', '/onboarding', '/login', '/forgot-password', '/register', '/mypage/apple-callback', '/auth/naver', '/auth/kakao', '/terms', '/privacy']
 
@@ -10,17 +11,19 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null
-  }
-  return null
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = document.cookie.match(new RegExp('(?:^|; )' + escapedName + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function getDomainStr(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.hostname.endsWith('ggap.ai') ? '; domain=.ggap.ai' : ''
 }
 
 function setCookie(name: string, value: string, maxAgeSeconds: number) {
   if (typeof document === 'undefined') return
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax${getDomainStr()}`
 }
 
 // 30초 여유를 두어 만료 임박 시에도 갱신
@@ -73,6 +76,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         setAuthorized(true)
       })
       .catch(() => {
+        deleteCookies()
         router.replace('/login')
       })
   }, [pathname])

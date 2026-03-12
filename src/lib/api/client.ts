@@ -12,12 +12,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null
-  }
-  return null
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = document.cookie.match(new RegExp('(?:^|; )' + escapedName + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : null
 }
 
 function isTokenExpired(token: string): boolean {
@@ -29,15 +26,27 @@ function isTokenExpired(token: string): boolean {
   }
 }
 
+function getDomainStr(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.hostname.endsWith('ggap.ai') ? '; domain=.ggap.ai' : ''
+}
+
 function setCookie(name: string, value: string, maxAgeSeconds: number) {
   if (typeof document === 'undefined') return
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax${getDomainStr()}`
 }
 
 export function deleteCookies() {
   if (typeof document === 'undefined') return
-  document.cookie = 'Authorization=; path=/; max-age=0; samesite=lax'
-  document.cookie = 'Refresh-token=; path=/; max-age=0; samesite=lax'
+  const domainStr = getDomainStr()
+  // domain 지정 쿠키 삭제
+  document.cookie = `Authorization=; path=/; max-age=0; samesite=lax${domainStr}`
+  document.cookie = `Refresh-token=; path=/; max-age=0; samesite=lax${domainStr}`
+  // domain 없이 저장된 쿠키도 함께 삭제
+  if (domainStr) {
+    document.cookie = 'Authorization=; path=/; max-age=0; samesite=lax'
+    document.cookie = 'Refresh-token=; path=/; max-age=0; samesite=lax'
+  }
 }
 
 // 인증 없이 호출 가능한 공개 API 패턴
@@ -150,24 +159,21 @@ class ApiClient {
       const responseAccessToken = response.data?.accessToken
       const responseRefreshToken = response.data?.refreshToken
 
-      if (responseAccessToken) {
-        setCookie('Authorization', responseAccessToken, 900)
+      if (!responseAccessToken) {
+        this.redirectToLogin()
+        return Promise.reject(new Error('Token refresh failed'))
       }
+
+      setCookie('Authorization', responseAccessToken, 900)
 
       if (responseRefreshToken) {
         setCookie('Refresh-token', responseRefreshToken, 1209600)
       }
 
-      const newAccessToken = getCookie('Authorization')
-      if (!newAccessToken) {
-        this.redirectToLogin()
-        return Promise.reject(new Error('Token refresh failed'))
-      }
-
-      this.refreshSubscribers.forEach((cb) => cb(newAccessToken))
+      this.refreshSubscribers.forEach((cb) => cb(responseAccessToken))
       this.refreshSubscribers = []
 
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+      originalRequest.headers.Authorization = `Bearer ${responseAccessToken}`
       return this.client(originalRequest)
     } catch {
       this.redirectToLogin()
@@ -179,6 +185,7 @@ class ApiClient {
 
   private redirectToLogin() {
     if (typeof window !== 'undefined') {
+      deleteCookies()
       window.location.href = '/login'
     }
   }

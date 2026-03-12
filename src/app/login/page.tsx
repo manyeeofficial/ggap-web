@@ -11,10 +11,6 @@ import { toast } from 'sonner'
 import { memberApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
-function setCookie(name: string, value: string, maxAge: number) {
-  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=None; Secure`
-}
-
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
