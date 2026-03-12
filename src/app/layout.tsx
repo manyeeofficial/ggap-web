@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import { AuthGuard } from './components/AuthGuard'
 import { BottomNavWrapper } from './components/BottomNavWrapper'
@@ -34,6 +35,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-GGVKGQ0FX0" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-GGVKGQ0FX0');
+          `}
+        </Script>
+      </head>
       <body>
         <MemberProvider>
           <SkinProfileProvider>
