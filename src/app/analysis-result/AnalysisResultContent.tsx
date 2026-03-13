@@ -308,7 +308,7 @@ export default function AnalysisResultContent() {
             <button onClick={() => router.back()} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-base font-semibold">분석 결과</h1>
+            <h1 className="text-base font-semibold">얼굴값 분석 결과</h1>
           </div>
         </div>
         <div className="p-5 space-y-4">
@@ -329,7 +329,7 @@ export default function AnalysisResultContent() {
             <button onClick={() => router.back()} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-base font-semibold">분석 결과</h1>
+            <h1 className="text-base font-semibold">얼굴값 분석 결과</h1>
           </div>
         </div>
         <div className="flex items-center justify-center p-6 min-h-[60vh]">
@@ -361,7 +361,7 @@ export default function AnalysisResultContent() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-base font-semibold">분석 결과</h1>
+          <h1 className="text-base font-semibold">얼굴값 분석 결과</h1>
           <button
             onClick={handleShare}
             disabled={isSharing}
@@ -412,6 +412,14 @@ export default function AnalysisResultContent() {
           </div>
         </div>
       )}
+
+      {/* 브랜딩 배너 */}
+      <div className="bg-gradient-to-r from-indigo-950 to-purple-950 px-5 py-3 flex items-center justify-between">
+        <p className="text-xs text-white/60">
+          <span className="text-white/90 font-semibold">077.co.kr</span>에서 내 얼굴값을 확인해보세요
+        </p>
+        <span className="text-xs text-indigo-300 font-medium shrink-0">ggap.ai</span>
+      </div>
 
       {/* 탭 콘텐츠 */}
       <div className="px-5 pt-5 pb-8">
