@@ -6,8 +6,6 @@ export interface LoginRequest {
   password: string
 }
 
-export type MobileCarrier = 'SKT' | 'KT' | 'LGU' | 'SKT_MVNO' | 'KT_MVNO' | 'LGU_MVNO'
-
 export interface SignupRequest {
   phoneNumber: string
   emailAddress: string
@@ -15,7 +13,6 @@ export interface SignupRequest {
   nickname?: string
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
-  mobileCarrier?: MobileCarrier
   agreeMarketing?: boolean
 }
 
@@ -68,7 +65,6 @@ export interface SocialCallbackResponse {
 export interface SocialCompleteSignupRequest {
   tempToken: string
   phoneNumber: string
-  mobileCarrier?: MobileCarrier
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
   naverAccessToken?: string
@@ -84,6 +80,7 @@ export interface Member {
   profileImage?: string
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
+  credit?: number
 }
 
 export interface MemberUpdateRequest {

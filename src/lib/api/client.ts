@@ -60,6 +60,7 @@ const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
   { url: /^\/apple-auth\// },                     // Apple 인증
   { url: /^\/kakao-auth\// },                     // Kakao 인증
   { url: /^\/naver-auth\// },                     // Naver 인증
+  { url: /^\/products\/trending$/, method: 'get' }, // 트렌딩 상품 (공개)
 ]
 
 function isPublicApiUrl(url?: string, method?: string): boolean {
@@ -122,6 +123,17 @@ class ApiClient {
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true
           return this.handleTokenRefresh(originalRequest)
+        }
+        if (
+          error.response?.status === 500 &&
+          originalRequest?.url === '/member' &&
+          originalRequest?.method?.toLowerCase() === 'get'
+        ) {
+          const domainStr = getDomainStr()
+          document.cookie = `Refresh-token=; path=/; max-age=0; samesite=lax${domainStr}`
+          if (domainStr) {
+            document.cookie = 'Refresh-token=; path=/; max-age=0; samesite=lax'
+          }
         }
         return Promise.reject(error)
       }

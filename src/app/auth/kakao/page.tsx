@@ -8,9 +8,8 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { memberApi } from '@/lib/api'
+import { memberApi, inviteApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
-import type { MobileCarrier } from '@/lib/types'
 
 function KakaoCallbackContent() {
   const router = useRouter()
@@ -24,7 +23,6 @@ function KakaoCallbackContent() {
   const [phoneFromKakao, setPhoneFromKakao] = useState(false)
   const [nickname, setNickname] = useState('')
   const [profileImageUrl, setProfileImageUrl] = useState('')
-  const [mobileCarrier, setMobileCarrier] = useState<MobileCarrier | ''>('')
   const [birthYear, setBirthYear] = useState('')
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | ''>('')
   const [agreeTerms, setAgreeTerms] = useState(false)
@@ -66,6 +64,12 @@ function KakaoCallbackContent() {
           if (result.birthYear) setBirthYear(String(result.birthYear))
           setStatus('phone')
         } else {
+          // 로그인 완료 — pendingInviteCode 처리
+          const pendingCode = localStorage.getItem('pendingInviteCode')
+          if (pendingCode) {
+            localStorage.removeItem('pendingInviteCode')
+            try { await inviteApi.acceptInvite(pendingCode) } catch { /* 중복·자기초대 무시 */ }
+          }
           await fetchMember()
           router.replace('/')
         }
@@ -83,13 +87,20 @@ function KakaoCallbackContent() {
       await memberApi.kakaoCompleteSignup({
         tempToken,
         phoneNumber: phoneNumber.replace(/-/g, ''),
-        mobileCarrier: mobileCarrier || undefined,
         birthYear: birthYear ? parseInt(birthYear) : undefined,
         gender: gender || undefined,
         agreeMarketing,
         nickname: nickname || undefined,
         profileImageUrl: profileImageUrl || undefined,
       })
+
+      // 가입 완료 — pendingInviteCode 처리
+      const pendingCode = localStorage.getItem('pendingInviteCode')
+      if (pendingCode) {
+        localStorage.removeItem('pendingInviteCode')
+        try { await inviteApi.acceptInvite(pendingCode) } catch { /* 중복·자기초대 무시 */ }
+      }
+
       await fetchMember()
       toast.success('카카오 회원가입이 완료되었습니다.')
       router.replace('/')
@@ -122,58 +133,32 @@ function KakaoCallbackContent() {
       </div>
 
       <div className="p-6 space-y-6">
-        <div className="bg-muted rounded-lg p-4">
+        <div className="bg-muted rounded-lg p-4 space-y-1">
           <p className="text-sm text-muted-foreground">
-            연결된 이메일: <span className="font-medium text-foreground">{email}</span>
+            이메일: <span className="font-medium text-foreground">{email}</span>
           </p>
-        </div>
-
-        <div>
-          <Label htmlFor="phoneNumber">
-            휴대전화번호 <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="phoneNumber"
-            type="tel"
-            placeholder="01012345678"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="mt-2 h-12"
-            required
-            disabled={isLoading || phoneFromKakao}
-          />
           {phoneFromKakao && (
-            <p className="text-xs text-muted-foreground mt-1">카카오 계정에서 가져온 번호입니다.</p>
+            <p className="text-sm text-muted-foreground">
+              휴대전화번호: <span className="font-medium text-foreground">{phoneNumber}</span>
+            </p>
           )}
         </div>
 
         {!phoneFromKakao && (
           <div>
-            <Label>이동통신사</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {[
-                { label: 'SKT', value: 'SKT' as const },
-                { label: 'KT', value: 'KT' as const },
-                { label: 'LGU+', value: 'LGU' as const },
-                { label: 'SKT 알뜰폰', value: 'SKT_MVNO' as const },
-                { label: 'KT 알뜰폰', value: 'KT_MVNO' as const },
-                { label: 'LGU+ 알뜰폰', value: 'LGU_MVNO' as const },
-              ].map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setMobileCarrier(c.value)}
-                  className={`h-12 rounded-md border-2 text-sm transition-colors ${
-                    mobileCarrier === c.value
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  disabled={isLoading}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
+            <Label htmlFor="phoneNumber">
+              휴대전화번호 <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="phoneNumber"
+              type="tel"
+              placeholder="01012345678"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="mt-2 h-12"
+              required
+              disabled={isLoading}
+            />
           </div>
         )}
 

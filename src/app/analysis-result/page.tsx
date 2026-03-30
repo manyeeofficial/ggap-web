@@ -3,18 +3,18 @@ import { Suspense } from 'react'
 import AnalysisResultContent from './AnalysisResultContent'
 
 export const metadata: Metadata = {
-  title: '내 얼굴값 공개 🔥 | 077.co.kr',
-  description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? 077.co.kr에서 지금 확인해보세요.',
+  title: '내 얼굴값 공개 🔥 | ㅇㄱㄱ',
+  description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? ggap.ai에서 지금 확인해보세요.',
   openGraph: {
     title: '내 얼굴값 공개 🔥',
-    description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? 077.co.kr에서 지금 확인해보세요.',
+    description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? ggap.ai에서 지금 확인해보세요.',
     type: 'website',
-    siteName: '077.co.kr',
+    siteName: 'ㅇㄱㄱ',
   },
   twitter: {
     card: 'summary_large_image',
     title: '내 얼굴값 공개 🔥',
-    description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? 077.co.kr에서 지금 확인해보세요.',
+    description: 'AI가 분석한 나의 얼굴값! 당신의 얼굴값은 얼마일까요? ggap.ai에서 지금 확인해보세요.',
   },
 }
 

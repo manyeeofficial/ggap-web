@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { memberApi } from '@/lib/api'
+import { memberApi, inviteApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
 function LoginContent() {
@@ -43,6 +43,16 @@ function LoginContent() {
 
   const isPhoneNumber = (value: string) => /^[\d-]+$/.test(value.trim())
 
+  const tryAcceptInviteIfPresent = async () => {
+    const code = searchParams.get('inviteCode')
+    if (!code) return
+    try {
+      await inviteApi.acceptInvite(code)
+    } catch {
+      // 이미 사용됐거나 자기 초대 등은 조용히 무시
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -52,6 +62,7 @@ function LoginContent() {
         ? { phoneNumber: identifier.replace(/-/g, ''), password }
         : { emailAddress: identifier.trim(), password }
       await memberApi.login(loginData)
+      await tryAcceptInviteIfPresent()
       router.push('/')
     } catch (err: any) {
       toast.error(err.response?.data?.message || '로그인에 실패했습니다.')
@@ -82,6 +93,12 @@ function LoginContent() {
   }
 
   const handleSocialLogin = async (provider: 'kakao' | 'naver' | 'apple') => {
+    // 초대 코드가 있으면 OAuth 리다이렉트 전에 localStorage에 보관
+    const inviteCode = searchParams.get('inviteCode')
+    if (inviteCode) {
+      localStorage.setItem('pendingInviteCode', inviteCode)
+    }
+
     try {
       let authUrl: string
       if (provider === 'kakao') {
@@ -281,7 +298,10 @@ function LoginContent() {
               <Button
                 variant="outline"
                 className="w-full h-12"
-                onClick={() => router.push('/register')}
+                onClick={() => {
+                  const code = searchParams.get('inviteCode')
+                  router.push(code ? `/register?inviteCode=${code}` : '/register')
+                }}
               >
                 회원가입
               </Button>

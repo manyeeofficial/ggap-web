@@ -9,11 +9,28 @@ import { Toaster } from './components/ui/sonner'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ggap.ai'),
-  title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
-  description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+  title: {
+    default: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    template: '%s | ㅇㄱㄱ',
+  },
+  description: 'AI가 분석하는 내 얼굴값. 셀카 한 장으로 피부 타입과 트러블을 진단하고 전국 랭킹에서 상위 몇 %인지 확인해보세요.',
+  keywords: ['얼굴값', 'AI 피부 분석', '피부 타입 분석', '얼굴 랭킹', '피부 진단', '셀카 분석', '피부 관리', '얼굴값 계산', 'ggap', 'ㅇㄱㄱ'],
+  authors: [{ name: 'ggap', url: 'https://ggap.ai' }],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  alternates: {
+    canonical: 'https://ggap.ai',
+  },
+  /*icons: {
+    icon: '/logo/logo.png',
+    apple: '/logo/logo.png',
+  },*/
   openGraph: {
     title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
-    description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    description: 'AI가 분석하는 내 얼굴값. 셀카 한 장으로 피부 타입과 트러블을 진단하고 전국 랭킹에서 상위 몇 %인지 확인해보세요.',
     url: 'https://ggap.ai',
     siteName: 'ㅇㄱㄱ',
     images: [{ url: '/og/banner.png', width: 1200, height: 630, alt: 'ㅇㄱㄱ - 얼굴값 췍!' }],
@@ -23,7 +40,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'ㅇㄱㄱ - 얼굴값 췍! 상위 몇 %인지 궁금하다면?',
-    description: '얼굴값 췍! 상위 몇 %인지 궁금하다면?',
+    description: 'AI가 분석하는 내 얼굴값. 셀카 한 장으로 피부 타입과 트러블을 진단하고 전국 랭킹에서 상위 몇 %인지 확인해보세요.',
     images: ['/og/banner.png'],
   },
 }

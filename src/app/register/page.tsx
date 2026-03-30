@@ -1,18 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { Checkbox } from '@/app/components/ui/checkbox'
 import { ArrowLeft } from 'lucide-react'
-import { memberApi } from '@/lib/api'
-import type { SignupRequest, MobileCarrier } from '@/lib/types'
+import { memberApi, inviteApi } from '@/lib/api'
+import type { SignupRequest } from '@/lib/types'
 import { toast } from 'sonner'
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,7 +22,6 @@ export default function RegisterPage() {
   const [nickname, setNickname] = useState('')
   const [birthYear, setBirthYear] = useState('')
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER' | ''>('')
-  const [mobileCarrier, setMobileCarrier] = useState<MobileCarrier | ''>('')
   const [agreeAll, setAgreeAll] = useState(false)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
@@ -80,12 +80,18 @@ export default function RegisterPage() {
           nickname: nickname || undefined,
           birthYear: birthYear ? parseInt(birthYear) : undefined,
           gender: gender || undefined,
-          mobileCarrier: mobileCarrier || undefined,
           agreeMarketing,
         }
 
         await memberApi.signup(signupData)
-        router.push('/login')
+
+        // 초대 코드가 있으면 수락
+        const inviteCode = searchParams.get('inviteCode')
+        if (inviteCode) {
+          try { await inviteApi.acceptInvite(inviteCode) } catch { /* 자기 초대·중복 등 무시 */ }
+        }
+
+        router.push('/')
       } catch (err: any) {
         console.error('Signup error:', err)
         toast.error(err.response?.data?.message || '회원가입에 실패했습니다.')
@@ -153,33 +159,6 @@ export default function RegisterPage() {
                 className="mt-2 h-12"
                 disabled={isLoading}
               />
-            </div>
-            <div>
-              <Label>이동통신사</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {[
-                  { label: 'SKT', value: 'SKT' as const },
-                  { label: 'KT', value: 'KT' as const },
-                  { label: 'LGU+', value: 'LGU' as const },
-                  { label: 'SKT 알뜰폰', value: 'SKT_MVNO' as const },
-                  { label: 'KT 알뜰폰', value: 'KT_MVNO' as const },
-                  { label: 'LGU+ 알뜰폰', value: 'LGU_MVNO' as const },
-                ].map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => setMobileCarrier(c.value)}
-                    className={`h-12 rounded-md border-2 text-sm transition-colors ${
-                      mobileCarrier === c.value
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    disabled={isLoading}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         )}
@@ -295,5 +274,13 @@ export default function RegisterPage() {
         </Button>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterContent />
+    </Suspense>
   )
 }

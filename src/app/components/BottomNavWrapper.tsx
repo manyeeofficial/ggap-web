@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Camera, Droplets, History, Settings } from 'lucide-react'
 import { ReactNode } from 'react'
+import Link from 'next/link'
 
 const tabs = [
   { path: '/', icon: Camera, label: '홈' },
@@ -32,12 +33,15 @@ export function BottomNavWrapper({ children }: { children: ReactNode }) {
       <div className={`flex-1 overflow-auto ${showBottomNav ? 'pb-20' : ''}`}>
         {children}
         <footer className="px-5 py-6 text-[10px] text-gray-400 leading-relaxed">
-          <p>상호: 마니 | 대표: 신민준</p>
+          <p>상호: 마니</p>
           <p>사업자번호: 397-46-01084</p>
           <p>통신판매신고: 제2023-서울강남-05683호</p>
           <p>주소: 서울시 강남구 논현로2길 60, 2층 2252호</p>
           <p>이메일: manyee.official@gmail.com</p>
-          <p>연락처: 02-423-5314</p>
+          <div className="flex gap-3 mt-3">
+            <Link href="/terms" className="underline underline-offset-2">이용약관</Link>
+            <Link href="/privacy" className="underline underline-offset-2">개인정보처리방침</Link>
+          </div>
         </footer>
       </div>
 

@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
-import { Camera, Lock } from 'lucide-react'
-import { rankingApi, skinAnalysisApi } from '@/lib/api'
+import { Camera, Lock, Gift, Zap } from 'lucide-react'
+import { rankingApi, skinAnalysisApi, inviteApi } from '@/lib/api'
+import TrendingProductsWidget from '@/app/components/TrendingProductsWidget'
 import { useMemberStore } from '@/lib/store/member-store'
 import type { RankingResult, SkinAnalysis, SkinType, TroubleType } from '@/lib/types'
 
@@ -50,12 +51,47 @@ function formatPercent(value: number): string {
   return value < 1 ? value.toFixed(1) : Math.round(value).toString()
 }
 
+function CreditExhaustedModal({ onClose, onInvite }: { onClose: () => void; onInvite: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="w-full max-w-md bg-white rounded-t-3xl px-6 pt-6 pb-10 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Zap className="w-7 h-7 text-indigo-400" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">분석 크레딧이 소진됐어요</h2>
+          <p className="text-sm text-gray-500">친구를 초대하면 +3회를 무료로 받을 수 있어요!</p>
+        </div>
+        <Button
+          className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl"
+          onClick={onInvite}
+        >
+          <Gift className="mr-2 w-4 h-4" />
+          친구 초대하고 +3회 받기
+        </Button>
+        <button
+          className="w-full mt-3 h-11 text-sm text-gray-400 font-medium"
+          onClick={onClose}
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function HomePage() {
   const router = useRouter()
   const { member, isLoaded, fetchMember } = useMemberStore()
   const [recentAnalyses, setRecentAnalyses] = useState<SkinAnalysis[]>([])
   const [ranking, setRanking] = useState<RankingResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showCreditModal, setShowCreditModal] = useState(false)
+  const [inviting, setInviting] = useState(false)
 
   useEffect(() => {
     if (!isLoaded) fetchMember()
@@ -81,19 +117,73 @@ export default function HomePage() {
       .finally(() => setLoading(false))
   }, [isLoaded, member])
 
+  const handleAnalysisStart = () => {
+    if (!member) {
+      router.push('/login')
+      return
+    }
+    const credit = member.credit ?? 0
+    if (credit <= 0) {
+      setShowCreditModal(true)
+      return
+    }
+    router.push('/camera')
+  }
+
+  const handleInvite = async () => {
+    if (inviting) return
+    setInviting(true)
+    try {
+      const result = await inviteApi.createInvite()
+      // 카카오 공유 SDK가 없으므로 클립보드에 복사
+      await navigator.clipboard.writeText(result.shareUrl)
+      setShowCreditModal(false)
+      alert(`초대 링크가 복사됐어요!\n\n${result.shareUrl}\n\n친구에게 공유해보세요 😊`)
+    } catch {
+      alert('초대 링크 생성에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setInviting(false)
+    }
+  }
+
   return (
     <div className="bg-white">
+      {showCreditModal && (
+        <CreditExhaustedModal
+          onClose={() => setShowCreditModal(false)}
+          onInvite={handleInvite}
+        />
+      )}
+
       {/* Hero */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">ㅇㄱㄱ - 얼굴값 분석</h1>
+        <div className="flex items-start justify-between mb-1">
+          <h1 className="text-2xl font-bold text-white">ㅇㄱㄱ - 얼굴값 분석</h1>
+          {member && (
+            <div className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1">
+              <Zap className="w-3.5 h-3.5 text-yellow-300" />
+              <span className="text-white text-xs font-bold">{member.credit ?? 0}회</span>
+            </div>
+          )}
+        </div>
         <p className="text-white/70 text-sm mb-6">얼굴값 췍! 상위 몇 %인지 궁금하다면?</p>
         <Button
-          onClick={() => router.push(member ? '/camera' : '/login')}
+          onClick={handleAnalysisStart}
           className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 font-semibold rounded-2xl shadow-none"
         >
           <Camera className="mr-2 w-4 h-4" />
           셀카 촬영하기
         </Button>
+        {member && (member.credit ?? 0) <= 0 && (
+          <button
+            onClick={handleInvite}
+            disabled={inviting}
+            className="w-full mt-2 h-10 text-white/80 text-sm font-medium flex items-center justify-center gap-1.5"
+          >
+            <Gift className="w-4 h-4" />
+            친구 초대하고 +3회 받기
+          </button>
+        )}
       </div>
 
       {/* 촬영 가이드 */}
@@ -168,6 +258,9 @@ export default function HomePage() {
           </div>
         ) : null}
       </div>
+
+      {/* 트렌딩 상품 */}
+      <TrendingProductsWidget />
 
       {/* 최근 분석 */}
       <div>

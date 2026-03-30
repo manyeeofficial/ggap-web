@@ -2,62 +2,32 @@ import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://ggap.ai'
-  const currentDate = new Date()
+  const now = new Date()
 
   return [
     {
       url: baseUrl,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
+      lastModified: now,
+      changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: `${baseUrl}/my-skin`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/history`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/settings`,
-      lastModified: currentDate,
+      url: `${baseUrl}/onboarding`,
+      lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/camera`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/faq`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/notices`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
       priority: 0.5,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: currentDate,
+      lastModified: now,
       changeFrequency: 'yearly',
-      priority: 0.4,
+      priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: currentDate,
+      lastModified: now,
       changeFrequency: 'yearly',
-      priority: 0.4,
+      priority: 0.3,
     },
   ]
 }

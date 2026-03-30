@@ -1,25 +1,33 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://ggap.ai'
-
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/onboarding', '/terms', '/privacy'],
         disallow: [
+          '/login',
+          '/register',
+          '/forgot-password',
+          '/camera',
+          '/analysis-loading',
+          '/analysis-result',
+          '/history',
+          '/my-skin',
           '/settings',
           '/profile-edit',
           '/skin-profile-edit',
-          '/analysis-loading',
-          '/analysis-result',
-          '/language-settings',
           '/notification-settings',
+          '/language-settings',
+          '/faq',
           '/contact',
+          '/notices',
+          '/auth/',
+          '/mypage/',
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: 'https://ggap.ai/sitemap.xml',
   }
 }
