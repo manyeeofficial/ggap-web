@@ -1,6 +1,14 @@
 import { axiosInstance } from './client'
 import type { SkinAnalysis, SkinAnalysisStatus } from '@/lib/types'
 
+async function convertHeicToJpeg(file: File): Promise<File> {
+  if (!file.name.toLowerCase().match(/\.heic?$/)) return file
+  const heic2any = (await import('heic2any')).default
+  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 })
+  const filename = file.name.replace(/\.heic?$/i, '.jpg')
+  return new File([blob as Blob], filename, { type: 'image/jpeg' })
+}
+
 export const skinAnalysisApi = {
   // 피부 분석 상태 조회 (비동기 처리 폴링용)
   async getStatus(id: number): Promise<SkinAnalysisStatus> {
@@ -10,8 +18,9 @@ export const skinAnalysisApi = {
 
   // 피부 분석 생성
   async analyze(imageFile: File): Promise<SkinAnalysis> {
+    const file = await convertHeicToJpeg(imageFile)
     const formData = new FormData()
-    formData.append('image', imageFile)
+    formData.append('image', file)
 
     const response = await axiosInstance.post<SkinAnalysis>(
       '/skin-analysis',
