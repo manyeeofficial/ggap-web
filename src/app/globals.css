@@ -122,6 +122,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* 스크롤 방향에 따른 sticky 헤더 자동 숨김 */
+[data-scroll-dir="down"] .sticky {
+  top: -100px;
+}
+[data-scroll-dir="up"] .sticky {
+  top: 0;
+}
+.sticky {
+  transition: top 0.3s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
