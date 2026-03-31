@@ -16,16 +16,6 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-function getDomainStr(): string {
-  if (typeof window === 'undefined') return ''
-  return window.location.hostname.endsWith('ggap.ai') ? '; domain=.ggap.ai' : ''
-}
-
-function setCookie(name: string, value: string, maxAgeSeconds: number) {
-  if (typeof document === 'undefined') return
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax${getDomainStr()}`
-}
-
 // 30초 여유를 두어 만료 임박 시에도 갱신
 function isTokenExpired(token: string): boolean {
   try {
@@ -70,10 +60,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         withCredentials: true,
       })
       .then((response) => {
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data
-        if (newAccessToken) setCookie('Authorization', newAccessToken, 900)
-        if (newRefreshToken) setCookie('Refresh-token', newRefreshToken, 1209600)
-        setAuthorized(true)
+        if (response.data?.accessToken) setAuthorized(true)
+        else {
+          deleteCookies()
+          router.replace('/login')
+        }
       })
       .catch(() => {
         deleteCookies()

@@ -31,11 +31,6 @@ function getDomainStr(): string {
   return window.location.hostname.endsWith('ggap.ai') ? '; domain=.ggap.ai' : ''
 }
 
-function setCookie(name: string, value: string, maxAgeSeconds: number) {
-  if (typeof document === 'undefined') return
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax${getDomainStr()}`
-}
-
 export function deleteCookies() {
   if (typeof document === 'undefined') return
   const domainStr = getDomainStr()
@@ -74,7 +69,6 @@ function isPublicApiUrl(url?: string, method?: string): boolean {
 
 interface RefreshTokenResponse {
   accessToken: string
-  refreshToken: string
 }
 
 class ApiClient {
@@ -169,17 +163,10 @@ class ApiClient {
       )
 
       const responseAccessToken = response.data?.accessToken
-      const responseRefreshToken = response.data?.refreshToken
 
       if (!responseAccessToken) {
         this.redirectToLogin()
         return Promise.reject(new Error('Token refresh failed'))
-      }
-
-      setCookie('Authorization', responseAccessToken, 900)
-
-      if (responseRefreshToken) {
-        setCookie('Refresh-token', responseRefreshToken, 1209600)
       }
 
       this.refreshSubscribers.forEach((cb) => cb(responseAccessToken))
