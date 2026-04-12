@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
-import { ChevronRight, User, Sparkles, Bell, Globe, HelpCircle, FileText, LogOut, UserX, Gift, Zap } from 'lucide-react'
+import { ChevronRight, User, Sparkles, Bell, Globe, FileText, LogOut, UserX, Gift, Zap } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +38,6 @@ const settingsSections = [
   {
     title: '고객 지원',
     items: [
-      { icon: HelpCircle, label: 'FAQ', path: '/faq' },
       { icon: FileText, label: '1:1 문의', path: '/contact' },
       { icon: FileText, label: '공지사항', path: '/notices', badge: 'N' },
     ],

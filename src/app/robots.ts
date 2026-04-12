@@ -20,7 +20,6 @@ export default function robots(): MetadataRoute.Robots {
           '/skin-profile-edit',
           '/notification-settings',
           '/language-settings',
-          '/faq',
           '/contact',
           '/notices',
           '/auth/',
