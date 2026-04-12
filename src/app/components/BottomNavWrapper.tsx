@@ -1,18 +1,19 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Camera, Droplets, History, Settings } from 'lucide-react'
+import { Camera, Droplets, History, Settings, Sparkles } from 'lucide-react'
 import { ReactNode, useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 
 const tabs = [
   { path: '/', icon: Camera, label: '홈' },
+  { path: '/studio', icon: Sparkles, label: '스튜디오' },
   { path: '/my-skin', icon: Droplets, label: '내 스킨' },
   { path: '/history', icon: History, label: '기록' },
   { path: '/settings', icon: Settings, label: '설정' },
 ]
 
-const bottomNavPages = ['/', '/my-skin', '/history', '/settings', '/analysis-result']
+const bottomNavPages = ['/', '/studio', '/my-skin', '/history', '/settings', '/analysis-result']
 
 export function BottomNavWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname()

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { X, FlipHorizontal, Zap, ZapOff, Camera as CameraIcon, ImagePlus, RotateCcw, ArrowRight } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -9,8 +9,10 @@ import { toast } from 'sonner'
 
 type CameraState = 'loading' | 'ready' | 'denied' | 'unsupported'
 
-export default function CameraPage() {
+function CameraContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -159,8 +161,14 @@ export default function CameraPage() {
   const handleAnalyze = () => {
     if (!capturedImage) return
     try {
-      sessionStorage.setItem('capturedImage', capturedImage)
-      router.push('/analysis-loading')
+      if (returnTo) {
+        // returnTo 경로로 이미지 전달 (sessionStorage key: returnTo 경로 기반)
+        sessionStorage.setItem('faceReadingImage', capturedImage)
+        router.push(returnTo)
+      } else {
+        sessionStorage.setItem('capturedImage', capturedImage)
+        router.push('/analysis-loading')
+      }
     } catch {
       toast.error('이미지 저장에 실패했습니다. 다시 시도해주세요.')
     }
@@ -356,5 +364,13 @@ export default function CameraPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CameraPage() {
+  return (
+    <Suspense>
+      <CameraContent />
+    </Suspense>
   )
 }

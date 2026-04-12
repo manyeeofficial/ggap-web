@@ -81,6 +81,8 @@ export interface Member {
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
   credit?: number
+  mbti?: string
+  birthdate?: string
 }
 
 export interface MemberUpdateRequest {

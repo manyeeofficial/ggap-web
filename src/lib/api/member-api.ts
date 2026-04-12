@@ -116,4 +116,14 @@ export const memberApi = {
   async withdraw(): Promise<void> {
     await axiosInstance.delete('/member/withdrawal')
   },
+
+  // MBTI 저장
+  async updateMbti(mbti: string): Promise<void> {
+    await axiosInstance.put('/member/mbti', { mbti })
+  },
+
+  // 생년월일 저장
+  async updateBirthdate(birthdate: string, isLunar: boolean): Promise<void> {
+    await axiosInstance.put('/member/birthdate', { birthdate, isLunar: String(isLunar) })
+  },
 }

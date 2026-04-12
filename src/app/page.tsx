@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
-import { Camera, Lock, Gift, Zap } from 'lucide-react'
+import { Camera, Lock, Gift, Zap, Sparkles, ChevronRight } from 'lucide-react'
 import { rankingApi, skinAnalysisApi, inviteApi } from '@/lib/api'
 import TrendingProductsWidget from '@/app/components/TrendingProductsWidget'
 import { useMemberStore } from '@/lib/store/member-store'
@@ -199,6 +199,25 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* 스튜디오 배너 */}
+      <div className="px-5 py-5 border-b border-gray-100">
+        <button
+          onClick={() => router.push('/studio')}
+          className="w-full flex items-center justify-between bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-100 rounded-2xl px-4 py-3.5"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-violet-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-gray-900">스튜디오 바로가기</p>
+              <p className="text-xs text-gray-500 mt-0.5">관상 · 동물상 · AI 프로필 · MBTI 매칭</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </button>
       </div>
 
       {/* 랭킹 */}
