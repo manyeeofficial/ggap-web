@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
-import { ChevronLeft, Zap } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { mbtiMatchApi, memberApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
@@ -55,7 +55,7 @@ const AXIS_DESCRIPTIONS: Record<string, string> = {
 
 function MbtiMatchContent() {
   const router = useRouter()
-  const { member, isLoaded, fetchMember } = useMemberStore()
+  const { isLoaded, fetchMember } = useMemberStore()
   const [ei, setEi] = useState<EIType | null>(null)
   const [sn, setSn] = useState<SNType | null>(null)
   const [tf, setTf] = useState<TFType | null>(null)
@@ -88,9 +88,6 @@ function MbtiMatchContent() {
     }
   }
 
-  const credit = member?.credit ?? 0
-  const hasCredit = credit > 0
-
   const selectedChar = [ei, sn, tf, jp].find((v) => v !== null && AXIS_DESCRIPTIONS[v])
 
   return (
@@ -115,12 +112,6 @@ function MbtiMatchContent() {
             얼굴과 MBTI가 얼마나 일치할까요?<br />
             겉바속촉 지수를 측정해 드려요
           </p>
-          {isLoaded && (
-            <div className="flex items-center gap-1.5 mt-3">
-              <Zap className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-xs font-semibold text-indigo-600">크레딧 {credit}회 남음</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -173,28 +164,11 @@ function MbtiMatchContent() {
         ))}
       </div>
 
-      {/* 크레딧 부족 안내 */}
-      {isLoaded && !hasCredit && (
-        <div className="px-5 mb-5">
-          <div className="bg-rose-50 rounded-2xl px-4 py-3.5 border border-rose-100">
-            <p className="text-sm font-semibold text-rose-700 mb-1">크레딧이 부족해요</p>
-            <p className="text-xs text-rose-500">친구를 초대하면 +3회 크레딧을 받을 수 있어요</p>
-            <Button
-              size="sm"
-              className="mt-3 bg-rose-600 hover:bg-rose-700 rounded-full"
-              onClick={() => router.push('/settings')}
-            >
-              크레딧 충전하기
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* 시작 버튼 */}
       <div className="px-5 mt-4">
         <Button
           onClick={handleSubmit}
-          disabled={!isComplete || !hasCredit || submitting}
+          disabled={!isComplete || submitting}
           className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-bold text-base disabled:opacity-50"
         >
           {submitting ? (

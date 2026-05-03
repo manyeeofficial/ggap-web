@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
-import { ChevronRight, User, Sparkles, Bell, Globe, FileText, LogOut, UserX, Gift, Zap } from 'lucide-react'
+import { ChevronRight, User, Sparkles, Bell, Globe, FileText, LogOut, UserX } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,10 +15,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/app/components/ui/alert-dialog'
-import { memberApi, inviteApi } from '@/lib/api'
+import { memberApi } from '@/lib/api'
 import { deleteCookies } from '@/lib/api/client'
 import { useMemberStore } from '@/lib/store/member-store'
-import type { InviteHistory } from '@/lib/types'
 
 const settingsSections = [
   {
@@ -54,35 +53,12 @@ const settingsSections = [
 export default function SettingsPage() {
   const router = useRouter()
   const { member, isLoaded, fetchMember, clearMember } = useMemberStore()
-  const [inviteHistory, setInviteHistory] = useState<InviteHistory | null>(null)
-  const [inviting, setInviting] = useState(false)
 
   useEffect(() => {
     if (!isLoaded) {
       fetchMember()
     }
   }, [isLoaded, fetchMember])
-
-  useEffect(() => {
-    if (!isLoaded || !member) return
-    inviteApi.getHistory().then(setInviteHistory).catch(() => {})
-  }, [isLoaded, member])
-
-  const handleInvite = async () => {
-    if (inviting) return
-    setInviting(true)
-    try {
-      const result = await inviteApi.createInvite()
-      await navigator.clipboard.writeText(result.shareUrl)
-      alert(`초대 링크가 복사됐어요!\n\n${result.shareUrl}`)
-      const history = await inviteApi.getHistory()
-      setInviteHistory(history)
-    } catch {
-      alert('초대 링크 생성에 실패했습니다.')
-    } finally {
-      setInviting(false)
-    }
-  }
 
   const handleLogout = async () => {
     try {
@@ -111,34 +87,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-
-      {/* 크레딧 & 초대 카드 */}
-      {member && (
-        <div className="px-5 pt-5 pb-2">
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-indigo-600" />
-                <span className="text-sm font-semibold text-gray-700">분석 크레딧</span>
-              </div>
-              <span className="text-2xl font-bold text-indigo-600">{member.credit ?? 0}회</span>
-            </div>
-            {inviteHistory && (
-              <p className="text-xs text-gray-500 mb-3">
-                초대 보상: {inviteHistory.rewarded}회 받음 · 대기 중 {inviteHistory.pending}건
-              </p>
-            )}
-            <button
-              onClick={handleInvite}
-              disabled={inviting}
-              className="w-full h-10 bg-indigo-600 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-60"
-            >
-              <Gift className="w-4 h-4" />
-              {inviting ? '링크 생성 중...' : '친구 초대하고 +3회 받기'}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 설정 섹션 */}
       <div className="pb-10">

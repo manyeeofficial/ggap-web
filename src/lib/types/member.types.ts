@@ -1,21 +1,5 @@
 // Member Request/Response Types
 
-export interface LoginRequest {
-  emailAddress?: string
-  phoneNumber?: string
-  password: string
-}
-
-export interface SignupRequest {
-  phoneNumber: string
-  emailAddress: string
-  password: string
-  nickname?: string
-  birthYear?: number
-  gender?: 'MALE' | 'FEMALE' | 'OTHER'
-  agreeMarketing?: boolean
-}
-
 export interface VerificationCodeRequest {
   phoneNumber: string
 }
@@ -80,7 +64,6 @@ export interface Member {
   profileImage?: string
   birthYear?: number
   gender?: 'MALE' | 'FEMALE' | 'OTHER'
-  credit?: number
   mbti?: string
   birthdate?: string
 }

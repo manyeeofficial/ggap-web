@@ -8,15 +8,13 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { memberApi, inviteApi } from '@/lib/api'
+import { memberApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { fetchMember } = useMemberStore()
-  const [identifier, setIdentifier] = useState('')
-  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   // Apple 신규 회원 — 전화번호 입력 상태
@@ -41,36 +39,6 @@ function LoginContent() {
     }
   }, [searchParams])
 
-  const isPhoneNumber = (value: string) => /^[\d-]+$/.test(value.trim())
-
-  const tryAcceptInviteIfPresent = async () => {
-    const code = searchParams.get('inviteCode')
-    if (!code) return
-    try {
-      await inviteApi.acceptInvite(code)
-    } catch {
-      // 이미 사용됐거나 자기 초대 등은 조용히 무시
-    }
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const loginData = isPhoneNumber(identifier)
-        ? { phoneNumber: identifier.replace(/-/g, ''), password }
-        : { emailAddress: identifier.trim(), password }
-      await memberApi.login(loginData)
-      await tryAcceptInviteIfPresent()
-      router.push('/')
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || '로그인에 실패했습니다.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleAppleSignupComplete = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!appleSignup) return
@@ -93,12 +61,6 @@ function LoginContent() {
   }
 
   const handleSocialLogin = async (provider: 'kakao' | 'naver' | 'apple') => {
-    // 초대 코드가 있으면 OAuth 리다이렉트 전에 localStorage에 보관
-    const inviteCode = searchParams.get('inviteCode')
-    if (inviteCode) {
-      localStorage.setItem('pendingInviteCode', inviteCode)
-    }
-
     try {
       let authUrl: string
       if (provider === 'kakao') {
@@ -202,7 +164,7 @@ function LoginContent() {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3">
             <Button
               onClick={() => handleSocialLogin('kakao')}
               className="w-full h-12 bg-[#FEE500] hover:bg-[#FDD835] text-gray-900"
@@ -232,80 +194,6 @@ function LoginContent() {
               </svg>
               Apple로 로그인
             </Button> */}
-          </div>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-600">
-                또는 이메일/휴대전화로 로그인
-              </span>
-            </div>
-          </div>
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Label htmlFor="identifier">이메일 또는 휴대전화번호</Label>
-              <Input
-                id="identifier"
-                type="text"
-                placeholder="face@ggap.ai 또는 01012345678"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="mt-2 h-12"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">비밀번호</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 h-12"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-700"
-              disabled={isLoading}
-            >
-              {isLoading ? '로그인 중...' : '로그인'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center space-y-4">
-            <button
-              onClick={() => router.push('/forgot-password')}
-              className="text-gray-600 text-sm hover:text-indigo-600"
-            >
-              비밀번호를 잊으셨나요?
-            </button>
-
-            <div className="pt-4 border-t">
-              <p className="text-gray-600 text-sm mb-3">아직 계정이 없으신가요?</p>
-              <Button
-                variant="outline"
-                className="w-full h-12"
-                onClick={() => {
-                  const code = searchParams.get('inviteCode')
-                  router.push(code ? `/register?inviteCode=${code}` : '/register')
-                }}
-              >
-                회원가입
-              </Button>
-            </div>
           </div>
         </div>
       </div>

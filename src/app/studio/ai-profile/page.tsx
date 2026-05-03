@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
-import { Camera, ChevronLeft, Upload, Zap } from 'lucide-react'
+import { Camera, ChevronLeft, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { aiProfileApi, skinAnalysisApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
@@ -97,7 +96,7 @@ const STYLES: {
 function AiProfileContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { member, isLoaded, fetchMember } = useMemberStore()
+  const { isLoaded, fetchMember } = useMemberStore()
   const [selectedStyle, setSelectedStyle] = useState<ProfileStyle | null>(
     (searchParams.get('style') as ProfileStyle | null) ?? null
   )
@@ -171,9 +170,6 @@ function AiProfileContent() {
     router.push('/camera?returnTo=/studio/ai-profile')
   }
 
-  const credit = member?.credit ?? 0
-  const hasCredit = credit > 0
-
   return (
     <div className="min-h-screen bg-white pb-10">
       {/* 헤더 */}
@@ -196,12 +192,6 @@ function AiProfileContent() {
             10가지 스타일로 나만의 AI 프로필 사진을 만들어보세요<br />
             세로형 3:4 비율로 프사·공유에 최적화된 화질로 생성돼요
           </p>
-          {isLoaded && (
-            <div className="flex items-center gap-1.5 mt-3">
-              <Zap className="w-3.5 h-3.5 text-pink-500" />
-              <span className="text-xs font-semibold text-pink-600">크레딧 {credit}회 남음</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -253,7 +243,7 @@ function AiProfileContent() {
             <Skeleton className="h-20 w-full rounded-2xl" />
           ) : recentAnalysis?.imageUrl ? (
             <button
-              disabled={!hasCredit || submitting}
+              disabled={submitting}
               onClick={() => startAnalysis({ skinAnalysisId: recentAnalysis.id, style: selectedStyle })}
               className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -274,7 +264,7 @@ function AiProfileContent() {
           ) : null}
 
           <button
-            disabled={!hasCredit || submitting}
+            disabled={submitting}
             onClick={handleCameraCapture}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -288,7 +278,7 @@ function AiProfileContent() {
           </button>
 
           <button
-            disabled={!hasCredit || submitting}
+            disabled={submitting}
             onClick={() => fileInputRef.current?.click()}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -307,23 +297,6 @@ function AiProfileContent() {
             className="hidden"
             onChange={handleFileChange}
           />
-        </div>
-      )}
-
-      {/* 크레딧 부족 안내 */}
-      {isLoaded && !hasCredit && (
-        <div className="px-5">
-          <div className="bg-rose-50 rounded-2xl px-4 py-3.5 border border-rose-100">
-            <p className="text-sm font-semibold text-rose-700 mb-1">크레딧이 부족해요</p>
-            <p className="text-xs text-rose-500">친구를 초대하면 +3회 크레딧을 받을 수 있어요</p>
-            <Button
-              size="sm"
-              className="mt-3 bg-rose-600 hover:bg-rose-700 rounded-full"
-              onClick={() => router.push('/settings')}
-            >
-              크레딧 충전하기
-            </Button>
-          </div>
         </div>
       )}
 

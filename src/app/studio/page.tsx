@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Sparkles, Zap, ChevronRight } from 'lucide-react'
+import { Sparkles, ChevronRight } from 'lucide-react'
 import { useMemberStore } from '@/lib/store/member-store'
 import { useEffect } from 'react'
 
@@ -87,7 +87,7 @@ const features = [
 
 export default function StudioPage() {
   const router = useRouter()
-  const { member, isLoaded, fetchMember } = useMemberStore()
+  const { isLoaded, fetchMember } = useMemberStore()
 
   useEffect(() => {
     if (!isLoaded) fetchMember()
@@ -99,12 +99,6 @@ export default function StudioPage() {
       <div className="px-5 pt-8 pb-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">스튜디오</h1>
-          {member && (
-            <div className="flex items-center gap-1 bg-indigo-50 rounded-full px-3 py-1">
-              <Zap className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-indigo-600 text-xs font-bold">{member.credit ?? 0}회</span>
-            </div>
-          )}
         </div>
         <p className="text-sm text-gray-400">AI로 즐기는 재미있는 분석</p>
       </div>

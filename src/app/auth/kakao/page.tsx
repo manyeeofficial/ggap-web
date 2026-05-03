@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { memberApi, inviteApi } from '@/lib/api'
+import { memberApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
 function KakaoCallbackContent() {
@@ -64,12 +64,6 @@ function KakaoCallbackContent() {
           if (result.birthYear) setBirthYear(String(result.birthYear))
           setStatus('phone')
         } else {
-          // 로그인 완료 — pendingInviteCode 처리
-          const pendingCode = localStorage.getItem('pendingInviteCode')
-          if (pendingCode) {
-            localStorage.removeItem('pendingInviteCode')
-            try { await inviteApi.acceptInvite(pendingCode) } catch { /* 중복·자기초대 무시 */ }
-          }
           await fetchMember()
           router.replace('/')
         }
@@ -93,13 +87,6 @@ function KakaoCallbackContent() {
         nickname: nickname || undefined,
         profileImageUrl: profileImageUrl || undefined,
       })
-
-      // 가입 완료 — pendingInviteCode 처리
-      const pendingCode = localStorage.getItem('pendingInviteCode')
-      if (pendingCode) {
-        localStorage.removeItem('pendingInviteCode')
-        try { await inviteApi.acceptInvite(pendingCode) } catch { /* 중복·자기초대 무시 */ }
-      }
 
       await fetchMember()
       toast.success('카카오 회원가입이 완료되었습니다.')

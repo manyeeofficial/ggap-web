@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
-import { Camera, ChevronLeft, Upload, Zap } from 'lucide-react'
+import { Camera, ChevronLeft, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { ageSimulationApi, skinAnalysisApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
@@ -16,7 +15,7 @@ const AGE_PRESETS = [10, 20, 30, 40, 50, 60, 70, 80]
 
 function AgeSimulationContent() {
   const router = useRouter()
-  const { member, isLoaded, fetchMember } = useMemberStore()
+  const { isLoaded, fetchMember } = useMemberStore()
   const [selectedAge, setSelectedAge] = useState(60)
   const [recentAnalysis, setRecentAnalysis] = useState<SkinAnalysis | null>(null)
   const [loadingAnalysis, setLoadingAnalysis] = useState(true)
@@ -87,9 +86,6 @@ function AgeSimulationContent() {
     router.push('/camera?returnTo=/studio/age-simulation')
   }
 
-  const credit = member?.credit ?? 0
-  const hasCredit = credit > 0
-
   return (
     <div className="min-h-screen bg-white pb-10">
       {/* 헤더 */}
@@ -112,12 +108,6 @@ function AgeSimulationContent() {
             10살부터 100살까지, 나이대별 모습을<br />
             AI가 생성합니다. 미래의 내 모습은?
           </p>
-          {isLoaded && (
-            <div className="flex items-center gap-1.5 mt-3">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-xs font-semibold text-amber-600">크레딧 {credit}회 남음</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -173,7 +163,7 @@ function AgeSimulationContent() {
           <Skeleton className="h-20 w-full rounded-2xl" />
         ) : recentAnalysis?.imageUrl ? (
           <button
-            disabled={!hasCredit || submitting}
+            disabled={submitting}
             onClick={() => startAnalysis({ skinAnalysisId: recentAnalysis.id, targetAge: selectedAge })}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -194,7 +184,7 @@ function AgeSimulationContent() {
         ) : null}
 
         <button
-          disabled={!hasCredit || submitting}
+          disabled={submitting}
           onClick={handleCameraCapture}
           className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -208,7 +198,7 @@ function AgeSimulationContent() {
         </button>
 
         <button
-          disabled={!hasCredit || submitting}
+          disabled={submitting}
           onClick={() => fileInputRef.current?.click()}
           className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -228,23 +218,6 @@ function AgeSimulationContent() {
           onChange={handleFileChange}
         />
       </div>
-
-      {/* 크레딧 부족 안내 */}
-      {isLoaded && !hasCredit && (
-        <div className="px-5">
-          <div className="bg-rose-50 rounded-2xl px-4 py-3.5 border border-rose-100">
-            <p className="text-sm font-semibold text-rose-700 mb-1">크레딧이 부족해요</p>
-            <p className="text-xs text-rose-500">친구를 초대하면 +3회 크레딧을 받을 수 있어요</p>
-            <Button
-              size="sm"
-              className="mt-3 bg-rose-600 hover:bg-rose-700 rounded-full"
-              onClick={() => router.push('/settings')}
-            >
-              크레딧 충전하기
-            </Button>
-          </div>
-        </div>
-      )}
 
       {submitting && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

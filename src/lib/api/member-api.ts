@@ -1,7 +1,5 @@
 import { axiosInstance } from './client'
 import type {
-  LoginRequest,
-  SignupRequest,
   Member,
   MemberUpdateRequest,
   AppleAuthSession,
@@ -11,26 +9,6 @@ import type {
 } from '@/lib/types'
 
 export const memberApi = {
-  // 로그인
-  async login(data: LoginRequest): Promise<string> {
-    const response = await axiosInstance.post<string>('/member/login', data)
-    return response.data
-  },
-
-  // 이메일/전화번호 중복 확인
-  async checkDuplicate(emailAddress: string, phoneNumber: string): Promise<{ emailExists: boolean; phoneExists: boolean }> {
-    const response = await axiosInstance.get('/member/check-duplicate', {
-      params: { emailAddress, phoneNumber },
-    })
-    return response.data
-  },
-
-  // 회원가입
-  async signup(data: SignupRequest): Promise<string> {
-    const response = await axiosInstance.post<string>('/member', data)
-    return response.data
-  },
-
   // Apple 로그인 URL 조회
   async getAppleSigninUrl(): Promise<string> {
     const response = await axiosInstance.get<{ authUrl: string }>('/apple-auth/signin-url')
