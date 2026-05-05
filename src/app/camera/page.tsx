@@ -42,8 +42,6 @@ function CameraContent() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 1720 },
         },
         audio: false,
       })
@@ -280,7 +278,7 @@ function CameraContent() {
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{ transform: mirrored ? 'scaleX(-1)' : 'none' }}
         />
 
