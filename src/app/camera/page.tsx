@@ -325,7 +325,7 @@ function CameraContent() {
         {/* Tooltip */}
         <div className="absolute bottom-40 left-0 right-0 px-6">
           <div className="bg-black/70 backdrop-blur-sm rounded-2xl p-4">
-            <p className="text-white text-sm text-center">정면을 바라보고, 충분한 조명을 확보해주세요</p>
+            <p className="text-white text-sm text-center">정면을 바라보고, 자연광 또는 백색 LED 아래에서 촬영해주세요</p>
           </div>
         </div>
 

@@ -55,6 +55,7 @@ const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
   { url: /^\/apple-auth\// },                     // Apple 인증
   { url: /^\/kakao-auth\// },                     // Kakao 인증
   { url: /^\/naver-auth\// },                     // Naver 인증
+  { url: /^\/stats$/, method: 'get' },              // 서비스 통계 (공개)
   { url: /^\/products\/trending$/, method: 'get' }, // 트렌딩 상품 (공개)
   { url: /^\/skin-analysis\/anonymous$/, method: 'post' }, // 비회원 분석
   { url: /^\/skin-analysis\/\d+\/status$/, method: 'get' }, // 분석 상태 폴링
@@ -117,7 +118,11 @@ class ApiClient {
       (response) => response,
       async (error: AxiosError<ApiResponse<any>>) => {
         const originalRequest = error.config as any
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isPublicApiUrl(originalRequest.url, originalRequest.method)
+        ) {
           originalRequest._retry = true
           return this.handleTokenRefresh(originalRequest)
         }
@@ -188,7 +193,9 @@ class ApiClient {
   private redirectToLogin() {
     if (typeof window !== 'undefined') {
       deleteCookies()
-      window.location.href = '/'
+      if (window.location.pathname !== '/') {
+        window.location.href = '/'
+      }
     }
   }
 }

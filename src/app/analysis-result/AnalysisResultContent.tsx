@@ -7,29 +7,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Progress } from '@/app/components/ui/progress'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
-import { ArrowLeft, Camera, Sparkles, AlertCircle, Lock } from 'lucide-react'
+import { ArrowLeft, Camera, Sparkles, AlertCircle, Lock, ChevronRight } from 'lucide-react'
 import { skinAnalysisApi } from '@/lib/api'
 import type { SkinAnalysis, TroubleType, Severity, PersonalColor } from '@/lib/types'
 import { SocialLoginSheet } from '@/app/components/SocialLoginSheet'
 
+// 8타입 분류 (2026-05 축소). PersonalColor 타입 정의와 동기화 필요.
 const PERSONAL_COLOR_MAP: Record<PersonalColor, { displayName: string; season: string; bgColor: string; textColor: string }> = {
-  SPRING_PALE:   { displayName: '봄 페일',   season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
-  SPRING_LIGHT:  { displayName: '봄 라이트', season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
-  SPRING_BRIGHT: { displayName: '봄 브라이트', season: '봄', bgColor: 'bg-yellow-50', textColor: 'text-yellow-700' },
-  SPRING_TRUE:   { displayName: '봄 트루',   season: '봄',  bgColor: 'bg-yellow-50',  textColor: 'text-yellow-700' },
-  SUMMER_PALE:   { displayName: '여름 페일', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
-  SUMMER_LIGHT:  { displayName: '여름 라이트', season: '여름', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
-  SUMMER_MUTE:   { displayName: '여름 뮤트', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
-  SUMMER_TRUE:   { displayName: '여름 트루', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
-  AUTUMN_SOFT:   { displayName: '가을 소프트', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
-  AUTUMN_MUTE:   { displayName: '가을 뮤트', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
-  AUTUMN_DEEP:   { displayName: '가을 딥',   season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
-  AUTUMN_TRUE:   { displayName: '가을 트루', season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  SPRING_LIGHT:  { displayName: '봄 라이트',   season: '봄',  bgColor: 'bg-yellow-50', textColor: 'text-yellow-700' },
+  SPRING_BRIGHT: { displayName: '봄 브라이트', season: '봄',  bgColor: 'bg-yellow-50', textColor: 'text-yellow-700' },
+  SUMMER_LIGHT:  { displayName: '여름 라이트', season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
+  SUMMER_MUTE:   { displayName: '여름 뮤트',   season: '여름', bgColor: 'bg-blue-50',   textColor: 'text-blue-700' },
+  AUTUMN_MUTE:   { displayName: '가을 뮤트',   season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
+  AUTUMN_DEEP:   { displayName: '가을 딥',     season: '가을', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
   WINTER_BRIGHT: { displayName: '겨울 브라이트', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
-  WINTER_DEEP:   { displayName: '겨울 딥',   season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
-  WINTER_TRUE:   { displayName: '겨울 트루', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
-  WINTER_PALE:   { displayName: '겨울 페일', season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  WINTER_DEEP:   { displayName: '겨울 딥',     season: '겨울', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
 }
+
+// 퍼스널컬러 신뢰도 임계값 — 이 값 미만이면 경고 배너 노출
+const PERSONAL_COLOR_CONFIDENCE_THRESHOLD = 0.7
 
 const SKIN_TYPE_MAP: Record<string, { type: string; icon: string }> = {
   OILY: { type: '지성', icon: '💧' },
@@ -65,13 +61,11 @@ const SEVERITY_COLOR: Record<Severity, string> = {
   SEVERE: 'bg-red-50 text-red-600 border border-red-100',
 }
 
+// studio/page.tsx에서 활성화된 기능만 노출 (주석 해제될 때 함께 추가)
 const STUDIO_FEATURES = [
   { label: '관상보기', icon: '👁️', desc: '9개 부위 관상 분석' },
-  { label: '동물상', icon: '🐻', desc: '내 닮은 동물 찾기' },
-  { label: 'AI 프로필', icon: '✨', desc: '10가지 스타일 프로필' },
   { label: 'MBTI 매칭', icon: '💘', desc: '피부로 보는 MBTI' },
   { label: '나이 시뮬', icon: '⏳', desc: '10년 후 내 얼굴은?' },
-  { label: '전생/후생', icon: '🔮', desc: '전생과 후생 탐구' },
 ]
 
 export default function AnalysisResultContent() {
@@ -232,13 +226,36 @@ export default function AnalysisResultContent() {
         </div>
       )}
 
-      {/* 브랜딩 배너 */}
-      <div className="bg-gradient-to-r from-indigo-950 to-purple-950 px-5 py-3 flex items-center justify-between">
-        <p className="text-xs text-white/60">
-          <span className="text-white/90 font-semibold">077.co.kr</span>에서 내 얼굴값을 확인해보세요
-        </p>
-        <span className="text-xs text-indigo-300 font-medium shrink-0">ggap.ai</span>
-      </div>
+      {/* 비회원 → 로그인 바 / 회원 → 브랜딩 배너 */}
+      {isAnonymous ? (
+        <button
+          onClick={() => {
+            if (id && token) {
+              localStorage.setItem('pendingAnalysisClaim', JSON.stringify({ id, token }))
+            }
+            setLoginSheetOpen(true)
+          }}
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 active:from-indigo-700 active:to-purple-700 px-5 py-4 flex items-center justify-between text-white transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <Lock className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-sm">전체 얼굴값 보기</p>
+              <p className="text-xs text-white/75 mt-0.5">로그인하면 가려진 부분이 풀려요</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/70 flex-shrink-0" />
+        </button>
+      ) : (
+        <div className="bg-gradient-to-r from-indigo-950 to-purple-950 px-5 py-3 flex items-center justify-between">
+          <p className="text-xs text-white/60">
+            <span className="text-white/90 font-semibold">077.co.kr</span>에서 내 얼굴값을 확인해보세요
+          </p>
+          <span className="text-xs text-indigo-300 font-medium shrink-0">ggap.ai</span>
+        </div>
+      )}
 
       {/* 비회원 — 추가 기능 미리보기 */}
       {isAnonymous && (
@@ -283,6 +300,10 @@ export default function AnalysisResultContent() {
                 )}
                 {analysis.personalColor && (() => {
                   const pc = PERSONAL_COLOR_MAP[analysis.personalColor!]
+                  if (!pc) return null
+                  const lowConfidence =
+                    typeof analysis.confidenceScore === 'number' &&
+                    analysis.confidenceScore < PERSONAL_COLOR_CONFIDENCE_THRESHOLD
                   return (
                     <div className={`rounded-2xl p-5 ${pc.bgColor}`}>
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">퍼스널 컬러</p>
@@ -290,6 +311,14 @@ export default function AnalysisResultContent() {
                         <span className={`text-2xl font-bold ${pc.textColor}`}>{pc.displayName}</span>
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-white/70 ${pc.textColor}`}>{pc.season}톤</span>
                       </div>
+                      {lowConfidence && (
+                        <div className="mt-3 flex items-start gap-2 bg-white/70 rounded-xl px-3 py-2">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-[12px] text-gray-700 leading-snug">
+                            조명·필터 영향으로 신뢰도가 낮아요. 자연광 또는 백색 LED 아래에서 재촬영하면 더 정확해요.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )
                 })()}

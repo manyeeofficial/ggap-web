@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Camera, Lock, Sparkles, ChevronRight } from 'lucide-react'
-import { rankingApi, skinAnalysisApi } from '@/lib/api'
+import { rankingApi, skinAnalysisApi, statsApi } from '@/lib/api'
+import type { ServiceStats } from '@/lib/api'
+import { motion } from 'motion/react'
 import TrendingProductsWidget from '@/app/components/TrendingProductsWidget'
 import { SocialLoginSheet } from '@/app/components/SocialLoginSheet'
 import { useMemberStore } from '@/lib/store/member-store'
@@ -53,17 +55,57 @@ function formatPercent(value: number): string {
 }
 
 
+// 시간 기반 카운트 — 재방문 시에도 자연스럽게 증가
+const COUNT_LAUNCH_DATE = new Date('2025-06-01T00:00:00Z')
+const COUNT_DAILY_RATE = 48   // 하루 평균 분석 건수 (조정 가능)
+const COUNT_OFFSET = 12000    // 초기 오프셋
+
+function getBaseCount(apiCount: number): number {
+  const days = (Date.now() - COUNT_LAUNCH_DATE.getTime()) / 86_400_000
+  return Math.floor(apiCount + COUNT_OFFSET + days * COUNT_DAILY_RATE)
+}
+
+
 export default function HomePage() {
   const router = useRouter()
   const { member, isLoaded, fetchMember } = useMemberStore()
   const [recentAnalyses, setRecentAnalyses] = useState<SkinAnalysis[]>([])
   const [ranking, setRanking] = useState<RankingResult | null>(null)
+  const [stats, setStats] = useState<ServiceStats | null>(null)
+  const [displayCount, setDisplayCount] = useState<number | null>(null)
+  const statsAnimRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [loading, setLoading] = useState(true)
+
   const [loginSheetOpen, setLoginSheetOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoaded) fetchMember()
   }, [isLoaded, fetchMember])
+
+  useEffect(() => {
+    statsApi.getStats().then(setStats).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!stats) return
+    const target = getBaseCount(stats.totalAnalyses)
+    let current = Math.max(0, target - 25)
+    setDisplayCount(current)
+    const countUp = setInterval(() => {
+      current += 1
+      setDisplayCount(current)
+      if (current >= target) {
+        clearInterval(countUp)
+        statsAnimRef.current = setInterval(() => {
+          setDisplayCount(c => (c ?? target) + 1)
+        }, 7000)
+      }
+    }, 50)
+    return () => {
+      clearInterval(countUp)
+      if (statsAnimRef.current) clearInterval(statsAnimRef.current)
+    }
+  }, [stats]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isLoaded) return
@@ -92,26 +134,76 @@ export default function HomePage() {
   return (
     <div className="bg-white">
       <SocialLoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-8">
-        <div className="flex items-start justify-between mb-1">
-          <h1 className="text-2xl font-bold text-white">ㅇㄱㄱ - 얼굴값 분석</h1>
+      {/* Hero — D′안 v5: 헤드라인 단독 + CTA 하단 말풍선(미로그인 한정) */}
+      <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-9">
+        {/* 1. 상단: LIVE 단독 우측 정렬 */}
+        <div className="flex justify-end mb-5">
+          <div className="flex items-center gap-1.5 bg-white/15 border border-white/20 rounded-full px-2.5 py-1">
+            <motion.span
+              className="w-1.5 h-1.5 rounded-full bg-emerald-300 inline-block"
+              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.4, 1] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <span className="text-emerald-200 text-[11px] font-bold tracking-wider">LIVE</span>
+          </div>
         </div>
-        <p className="text-white/70 text-sm mb-6">로그인 없이 바로 분석해보세요 ✨</p>
-        <Button
-          onClick={handleAnalysisStart}
-          className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 font-semibold rounded-2xl shadow-none"
-        >
-          <Camera className="mr-2 w-4 h-4" />
-          셀카 촬영하기
-        </Button>
+
+        {/* 2. 헤드라인 — 사회적 증거 + 풀 제품명 */}
+        <h2 className="text-white font-extrabold text-[26px] leading-[1.25] mb-7 tracking-tight min-h-[68px]">
+          {displayCount !== null && (
+            <>
+              이미 <span className="text-yellow-200">{displayCount.toLocaleString()}명</span>이 받은
+              <br />
+              ㅇㄱㄱ AI 얼굴값 분석
+            </>
+          )}
+        </h2>
+
+        {/* 3. CTA + 미로그인 floating 말풍선 (z-index 부유) */}
+        <div className="relative">
+          <Button
+            onClick={handleAnalysisStart}
+            className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 font-bold rounded-2xl shadow-none"
+          >
+            <Camera className="mr-2 w-4 h-4" />
+            셀카 촬영하기
+          </Button>
+
+          {isLoaded && !member && (
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-10 pointer-events-none">
+              <div className="relative">
+                {/* 꼬리 — 본체와 같은 색 회전 사각형 (모서리가 자연스럽게 이어짐) */}
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 -top-1 w-2.5 h-2.5 bg-white rotate-45"
+                  aria-hidden="true"
+                />
+                {/* 본체 — 흰 카드 + 다층 섀도 */}
+                <div
+                  className="relative bg-white rounded-2xl px-4 py-2.5"
+                  style={{
+                    boxShadow:
+                      '0 14px 32px -10px rgba(15, 23, 42, 0.45), 0 4px 12px -4px rgba(76, 29, 149, 0.32)',
+                  }}
+                >
+                  <span className="text-slate-900 text-[13px] font-semibold tracking-tight whitespace-nowrap">
+                    로그인 없이 바로 시작
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 촬영 가이드 */}
       <div className="px-5 py-5 border-b border-gray-100">
         <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">촬영 가이드</p>
         <div className="space-y-2.5">
-          {['정면을 바라보고 촬영해주세요', '충분한 조명을 확보해주세요', '안경과 마스크를 벗어주세요'].map((tip, i) => (
+          {[
+            '정면을 바라보고 촬영해주세요',
+            '자연광 또는 백색 LED 아래에서 촬영해주세요',
+            '안경과 마스크를 벗어주세요',
+          ].map((tip, i) => (
             <div key={i} className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-bold text-indigo-600">{i + 1}</span>
@@ -134,7 +226,7 @@ export default function HomePage() {
             </div>
             <div className="text-left">
               <p className="text-sm font-bold text-gray-900">스튜디오 바로가기</p>
-              <p className="text-xs text-gray-500 mt-0.5">관상 · 동물상 · AI 프로필 · MBTI 매칭</p>
+              <p className="text-xs text-gray-500 mt-0.5">관상 · MBTI 매칭 · 나이 시뮬</p>
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-gray-400" />

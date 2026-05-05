@@ -1,23 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'motion/react'
-import { Progress } from '@/app/components/ui/progress'
 import { ScanFace, Palette, ImagePlus, CheckCircle2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { aiProfileApi } from '@/lib/api'
 import type { ProfileStyle } from '@/lib/types'
-import { Suspense } from 'react'
-
-const POLL_INTERVAL = 2000
-
-const steps = [
-  { icon: ScanFace, text: '얼굴 특징 분석 중...' },
-  { icon: Palette, text: '스타일 적용 중...' },
-  { icon: ImagePlus, text: '이미지 생성 중...' },
-  { icon: CheckCircle2, text: '마무리 중...' },
-]
+import { StudioLoadingPage } from '@/app/studio/components/StudioLoadingPage'
 
 const STYLE_TIPS: Record<ProfileStyle, string[]> = {
   ID_PHOTO: [
@@ -78,160 +64,33 @@ const DEFAULT_TIPS = [
   '생성된 이미지는 고화질 원본으로도 저장할 수 있어요',
 ]
 
-function AiProfileLoadingContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const id = Number(searchParams.get('id'))
-  const style = searchParams.get('style') as ProfileStyle | null
-  const [currentStep, setCurrentStep] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const [completed, setCompleted] = useState(false)
-  const [tipIndex, setTipIndex] = useState(0)
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const tips = style && STYLE_TIPS[style] ? STYLE_TIPS[style] : DEFAULT_TIPS
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTipIndex((i) => (i + 1) % tips.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [tips.length])
-
-  useEffect(() => {
-    if (!id) {
-      router.replace('/studio/ai-profile')
-      return
-    }
-    startPolling(id)
-    return () => stopPolling()
-  }, [id])
-
-  const startPolling = (aiProfileId: number) => {
-    pollingRef.current = setInterval(async () => {
-      try {
-        const status = await aiProfileApi.getStatus(aiProfileId)
-        if (status.status === 'COMPLETED') {
-          stopPolling()
-          setCompleted(true)
-        } else if (status.status === 'FAILED') {
-          stopPolling()
-          toast.error(status.errorMessage || 'AI 프로필 생성에 실패했습니다.')
-          router.replace('/studio/ai-profile')
-        }
-      } catch {
-        stopPolling()
-        toast.error('생성 상태 확인에 실패했습니다.')
-        router.replace('/studio/ai-profile')
-      }
-    }, POLL_INTERVAL)
-  }
-
-  const stopPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current)
-      pollingRef.current = null
-    }
-  }
-
-  // 프로그레스 애니메이션
-  useEffect(() => {
-    if (completed) return
-    const MAX = 85
-    const startTime = Date.now()
-    let extraProgress = 0
-    let lastJumpTime = Date.now()
-    let nextJumpDelay = 2000 + Math.random() * 2000
-    let rafId: number
-
-    const getStep = (p: number) => {
-      if (p < 22) return 0
-      if (p < 50) return 1
-      if (p < 72) return 2
-      return 3
-    }
-
-    const tick = () => {
-      const now = Date.now()
-      const secs = (now - startTime) / 1000
-
-      if (now - lastJumpTime >= nextJumpDelay) {
-        extraProgress = Math.min(extraProgress + 1 + Math.random() * 2, 15)
-        lastJumpTime = now
-        nextJumpDelay = 2000 + Math.random() * 3000
-      }
-
-      const base = MAX * (1 - Math.exp(-secs / 18))
-      const p = Math.min(base + extraProgress, MAX)
-
-      setProgress(p)
-      setCurrentStep(getStep(p))
-      rafId = requestAnimationFrame(tick)
-    }
-
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [completed])
-
-  useEffect(() => {
-    if (!completed) return
-    setCurrentStep(steps.length - 1)
-    setProgress(100)
-    const timeout = setTimeout(() => {
-      router.push(`/studio/ai-profile/result?id=${id}`)
-    }, 600)
-    return () => clearTimeout(timeout)
-  }, [completed, id, router])
-
-  const CurrentIcon = steps[currentStep].icon
-
-  return (
-    <div className="fixed inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <motion.div key={currentStep} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-12 flex justify-center">
-          <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }} className="relative">
-            <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center">
-              <CurrentIcon className="w-16 h-16 text-white" />
-            </div>
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-              className="absolute inset-0 rounded-full bg-white/30"
-            />
-          </motion.div>
-        </motion.div>
-
-        <div className="mb-8">
-          <Progress value={progress} className="h-2 bg-white/30" />
-          <p className="text-white text-center mt-3 font-medium">{Math.round(progress)}%</p>
-        </div>
-
-        <motion.div key={`text-${currentStep}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <p className="text-white text-xl font-semibold mb-2">{steps[currentStep].text}</p>
-          <p className="text-white/80 text-sm">AI 프로필을 생성하고 있어요</p>
-        </motion.div>
-
-        <div className="mt-8">
-          <p className="text-white/50 text-xs text-center mb-3">예상 소요 시간: 30-60초</p>
-          <motion.div
-            key={tipIndex}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3"
-          >
-            <p className="text-white/90 text-xs text-center leading-relaxed">💡 {tips[tipIndex]}</p>
-          </motion.div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function AiProfileLoadingPage() {
   return (
-    <Suspense>
-      <AiProfileLoadingContent />
-    </Suspense>
+    <StudioLoadingPage config={{
+      gradient: 'bg-gradient-to-br from-pink-500 via-rose-500 to-red-500',
+      steps: [
+        { icon: ScanFace, text: '얼굴 특징 분석 중...' },
+        { icon: Palette, text: '스타일 적용 중...' },
+        { icon: ImagePlus, text: '이미지 생성 중...' },
+        { icon: CheckCircle2, text: '마무리 중...' },
+      ],
+      tips: (params) => {
+        const style = params.get('style') as ProfileStyle | null
+        return style && STYLE_TIPS[style] ? STYLE_TIPS[style] : DEFAULT_TIPS
+      },
+      discoveries: [
+        '얼굴 비율 분석 완료',
+        '최적 조명 각도 파악 중',
+        '스타일 요소 매핑 중',
+        '세부 특징 반영 중',
+      ],
+      showFaceScan: true,
+      subtitle: 'AI 프로필을 생성하고 있어요',
+      estimatedTime: '30-60초',
+      progressMode: 'slow',
+      pollFn: (id) => aiProfileApi.getStatus(id),
+      resultPath: (id) => `/studio/ai-profile/result?id=${id}`,
+      entryPath: '/studio/ai-profile',
+    }} />
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { use } from 'react'
-import { Brain, ScanFace, Heart, Sparkles, Eye, CheckCircle2, Timer, ImagePlus } from 'lucide-react'
+import { Brain, ScanFace, Sparkles, Eye, CheckCircle2, Timer, ImagePlus } from 'lucide-react'
 import { faceReadingApi, mbtiMatchApi, ageSimulationApi } from '@/lib/api'
 import { StudioLoadingPage, type StudioLoadingConfig } from '@/app/studio/components/StudioLoadingPage'
 
@@ -21,6 +21,13 @@ const CONFIGS: Record<string, StudioLoadingConfig> = {
       '코는 재물과 중년운을 나타내는 핵심 부위예요',
       '입술이 도톰하고 선명할수록 인복이 많다고 해요',
     ],
+    discoveries: [
+      '이마 인상선 파악 완료',
+      '눈매 형태 분석 중',
+      '코끝 특징 측정 중',
+      '전체 관상 종합 중',
+    ],
+    showFaceScan: true,
     subtitle: '관상을 해석하고 있어요',
     estimatedTime: '15-30초',
     pollFn: (id) => faceReadingApi.getStatus(id),
@@ -32,8 +39,8 @@ const CONFIGS: Record<string, StudioLoadingConfig> = {
     steps: [
       { icon: Brain, text: 'MBTI 분석 중...' },
       { icon: ScanFace, text: '얼굴 특징 대조 중...' },
-      { icon: Heart, text: '궁합 계산 중...' },
-      { icon: Sparkles, text: '위트 생성 중...' },
+      { icon: Sparkles, text: '유형 도출 중...' },
+      { icon: CheckCircle2, text: '결과 정리 중...' },
     ],
     tips: [
       'MBTI는 16가지 유형으로 사람의 인식과 판단 방식을 분류해요',
@@ -42,7 +49,14 @@ const CONFIGS: Record<string, StudioLoadingConfig> = {
       '얼굴 인상이 성격과 일치할 수도, 전혀 다를 수도 있어요 — 그게 포인트!',
       'J(판단)는 계획적이고, P(인식)는 즉흥적인 경향이 있어요',
     ],
-    subtitle: 'MBTI와 얼굴의 궁합을 분석하고 있어요',
+    discoveries: [
+      '얼굴 첫인상 분석 완료',
+      '눈빛 성향 파악 중',
+      '표정 패턴 대조 중',
+      'MBTI 일치도 계산 중',
+    ],
+    showFaceScan: true,
+    subtitle: '얼굴로 MBTI를 분석하고 있어요',
     estimatedTime: '15-30초',
     pollFn: (id) => mbtiMatchApi.getStatus(id),
     resultPath: (id) => `/studio/mbti-match/result?id=${id}`,
@@ -63,6 +77,13 @@ const CONFIGS: Record<string, StudioLoadingConfig> = {
       '스트레스는 활성산소를 늘려 피부 노화를 가속화해요',
       '비타민 C 성분이 피부 콜라겐 합성에 도움을 줘요',
     ],
+    discoveries: [
+      '피부 탄력 측정 완료',
+      '얼굴형 윤곽 파악 중',
+      '주름 패턴 분석 중',
+      '시뮬레이션 이미지 생성 중',
+    ],
+    showFaceScan: true,
     subtitle: '나이 시뮬레이션 이미지를 생성하고 있어요',
     estimatedTime: '30-60초',
     progressMode: 'slow',

@@ -9,7 +9,8 @@
       "Bash(unzip:*)",
       "Bash(npm uninstall:*)",
       "Bash(ls:*)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "Bash(xargs cat *)"
     ]
   }
 }

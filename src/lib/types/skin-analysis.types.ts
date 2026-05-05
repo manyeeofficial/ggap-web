@@ -15,11 +15,12 @@ export interface SkinAnalysisStatus {
   imageUrl?: string
 }
 
+// 8타입 분류 (2026-05 16타입에서 축소). 백엔드 마이그레이션 V20260505_01과 동기화.
 export type PersonalColor =
-  | 'SPRING_PALE' | 'SPRING_LIGHT' | 'SPRING_BRIGHT' | 'SPRING_TRUE'
-  | 'SUMMER_PALE' | 'SUMMER_LIGHT' | 'SUMMER_MUTE' | 'SUMMER_TRUE'
-  | 'AUTUMN_SOFT' | 'AUTUMN_MUTE' | 'AUTUMN_DEEP' | 'AUTUMN_TRUE'
-  | 'WINTER_BRIGHT' | 'WINTER_DEEP' | 'WINTER_TRUE' | 'WINTER_PALE'
+  | 'SPRING_LIGHT' | 'SPRING_BRIGHT'
+  | 'SUMMER_LIGHT' | 'SUMMER_MUTE'
+  | 'AUTUMN_MUTE' | 'AUTUMN_DEEP'
+  | 'WINTER_BRIGHT' | 'WINTER_DEEP'
 
 export interface SkinAnalysis {
   id: number

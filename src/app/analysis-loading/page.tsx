@@ -8,15 +8,22 @@ import { skinAnalysisApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
 const POLL_INTERVAL = 2500
-const FEATURE_INTERVAL = 3500
+const TIP_INTERVAL = 4000
 
-const features = [
-  { emoji: '🔮', name: '관상보기', desc: '얼굴로 알아보는 나의 운명과 성격', color: 'from-violet-500 to-purple-600' },
-  { emoji: '🐯', name: '동물상', desc: '나를 닮은 동물이 뭔지 알아봐요', color: 'from-amber-500 to-orange-600' },
-  { emoji: '🧬', name: 'MBTI 매칭', desc: '얼굴에서 읽는 나의 MBTI 유형', color: 'from-cyan-500 to-blue-600' },
-  { emoji: '📸', name: 'AI 프로필', desc: '10가지 스타일의 AI 프로필 사진', color: 'from-rose-500 to-pink-600' },
-  { emoji: '⏳', name: '나이 시뮬레이션', desc: '10년 후, 20년 후 내 얼굴은?', color: 'from-emerald-500 to-teal-600' },
-  { emoji: '✨', name: '전생 / 후생', desc: '나는 전생에 누구였을까?', color: 'from-indigo-500 to-violet-600' },
+const STEP_LABELS = [
+  { range: [0, 25] as [number, number], text: '이미지 업로드 중...' },
+  { range: [25, 55] as [number, number], text: '피부 특징 분석 중...' },
+  { range: [55, 80] as [number, number], text: '피부 타입 판별 중...' },
+  { range: [80, 100] as [number, number], text: '결과 정리 중...' },
+]
+
+const TIPS = [
+  '클렌징 후 3분 이내에 보습제를 바르면 수분 증발을 막을 수 있어요',
+  '자외선 차단제는 실내에서도 매일 바르는 습관이 중요해요',
+  '충분한 수면이 피부 재생 호르몬 분비를 도와줘요',
+  '하루 2리터 수분 섭취가 피부 탄력 유지의 기본이에요',
+  '비타민 C 성분이 피부 콜라겐 합성과 미백에 도움을 줘요',
+  '스트레스는 활성산소를 늘려 피부 노화를 가속화해요',
 ]
 
 function dataUrlToFile(dataUrl: string, filename: string): File {
@@ -30,12 +37,18 @@ function dataUrlToFile(dataUrl: string, filename: string): File {
   return new File([bytes], filename, { type: mime })
 }
 
+function getStep(p: number) {
+  return STEP_LABELS.findIndex((s) => p >= s.range[0] && p < s.range[1])
+}
+
 export default function AnalysisLoadingPage() {
   const router = useRouter()
   const { member, isLoaded, fetchMember } = useMemberStore()
   const [progress, setProgress] = useState(0)
-  const [featureIdx, setFeatureIdx] = useState(0)
+  const [stepIdx, setStepIdx] = useState(0)
+  const [tipIdx, setTipIdx] = useState(0)
   const apiCalledRef = useRef(false)
+
   const analysisIdRef = useRef<number | null>(null)
   const [completed, setCompleted] = useState(false)
 
@@ -109,6 +122,7 @@ export default function AnalysisLoadingPage() {
 
   useEffect(() => () => stopPolling(), [])
 
+  // 프로그레스 애니메이션
   useEffect(() => {
     if (completed) return
     const MAX = 88
@@ -128,6 +142,8 @@ export default function AnalysisLoadingPage() {
       }
       const p = Math.min(MAX * (1 - Math.exp(-secs / 10)) + extraProgress, MAX)
       setProgress(p)
+      const s = getStep(p)
+      if (s >= 0) setStepIdx(s)
       rafId = requestAnimationFrame(tick)
     }
 
@@ -137,14 +153,15 @@ export default function AnalysisLoadingPage() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setFeatureIdx((i) => (i + 1) % features.length)
-    }, FEATURE_INTERVAL)
+      setTipIdx((i) => (i + 1) % TIPS.length)
+    }, TIP_INTERVAL)
     return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
     if (!completed) return
     setProgress(100)
+    setStepIdx(STEP_LABELS.length - 1)
     const timeout = setTimeout(() => {
       const token = sessionStorage.getItem('analysisToken')
       sessionStorage.removeItem('analysisToken')
@@ -156,61 +173,77 @@ export default function AnalysisLoadingPage() {
     return () => clearTimeout(timeout)
   }, [completed, router])
 
-  const feature = features[featureIdx]
-
   return (
-    <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-between px-6 pt-16 pb-12">
-      {/* 상단: 진행 바 */}
-      <div className="w-full max-w-sm">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-white/50 text-xs">피부 분석 중...</p>
-          <p className="text-white/40 text-xs">{Math.round(progress)}%</p>
-        </div>
-        <div className="w-full bg-white/10 rounded-full h-0.5">
+    <div className="fixed inset-0 bg-gradient-to-b from-indigo-600 to-violet-700 flex flex-col">
+      {/* 1. 일러스트 + 스캔라인 */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-44 h-44">
+          <svg width="176" height="176" viewBox="0 0 176 176" fill="none" className="absolute inset-0">
+            <ellipse cx="88" cy="88" rx="56" ry="70" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(255,255,255,0.05)" />
+            <ellipse cx="64" cy="74" rx="9" ry="6" fill="rgba(255,255,255,0.18)" />
+            <ellipse cx="112" cy="74" rx="9" ry="6" fill="rgba(255,255,255,0.18)" />
+            <path d="M88 84 L82 108 L94 108Z" fill="rgba(255,255,255,0.1)" />
+            <path d="M68 128 Q88 137 108 128" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M22 46 L22 28 L40 28" stroke="rgba(255,255,255,0.55)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M154 46 L154 28 L136 28" stroke="rgba(255,255,255,0.55)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M22 130 L22 148 L40 148" stroke="rgba(255,255,255,0.55)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M154 130 L154 148 L136 148" stroke="rgba(255,255,255,0.55)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <motion.div
-            className="h-0.5 rounded-full bg-white"
-            animate={{ width: `${progress}%` }}
-            transition={{ ease: 'easeOut', duration: 0.3 }}
+            className="absolute left-8 right-8 h-px"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)',
+              boxShadow: '0 0 10px rgba(255,255,255,0.5)',
+            }}
+            animate={{ top: ['16%', '84%'] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', repeatType: 'reverse' }}
           />
         </div>
       </div>
 
-      {/* 중단: 기능 홍보 카드 */}
-      <div className="w-full max-w-sm flex-1 flex flex-col items-center justify-center gap-5">
-        <p className="text-white/30 text-xs uppercase tracking-widest">이런 기능도 있어요</p>
+      {/* 2. 진행 상태 + 3. 팁 */}
+      <div className="px-6 pb-12 flex flex-col gap-5">
+        {/* 단계 라벨 + 진행바 */}
+        <div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={stepIdx}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="text-white font-semibold text-lg text-center mb-3"
+            >
+              {STEP_LABELS[stepIdx].text}
+            </motion.p>
+          </AnimatePresence>
 
+          <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-white rounded-full"
+              animate={{ width: `${progress}%` }}
+              transition={{ ease: 'easeOut', duration: 0.3 }}
+            />
+          </div>
+          <div className="flex justify-end mt-1.5">
+            <p className="text-white/60 text-xs">{Math.round(progress)}%</p>
+          </div>
+        </div>
+
+        {/* 팁 — 보조 영역 (4초 회전) */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={featureIdx}
-            initial={{ opacity: 0, y: 16 }}
+            key={tipIdx}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="w-full"
+            className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3"
           >
-            <div className={`rounded-2xl bg-gradient-to-br ${feature.color} p-7`}>
-              <div className="text-5xl mb-5">{feature.emoji}</div>
-              <p className="text-white text-xl font-bold mb-1.5">{feature.name}</p>
-              <p className="text-white/75 text-sm leading-relaxed">{feature.desc}</p>
-            </div>
+            <p className="text-white/85 text-sm text-center leading-relaxed">💡 {TIPS[tipIdx]}</p>
           </motion.div>
         </AnimatePresence>
-
-        {/* 도트 인디케이터 */}
-        <div className="flex gap-1.5">
-          {features.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === featureIdx ? 'w-4 bg-white' : 'w-1.5 bg-white/20'
-              }`}
-            />
-          ))}
-        </div>
       </div>
-
-      {/* 하단 */}
-      <p className="text-white/20 text-xs">분석 완료 시 자동으로 이동합니다</p>
     </div>
   )
 }
