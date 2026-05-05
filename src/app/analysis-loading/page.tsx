@@ -2,19 +2,21 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'motion/react'
-import { Progress } from '@/app/components/ui/progress'
-import { Upload, ScanFace, Sparkles, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
 import { skinAnalysisApi } from '@/lib/api'
+import { useMemberStore } from '@/lib/store/member-store'
 
 const POLL_INTERVAL = 2500
+const FEATURE_INTERVAL = 3500
 
-const steps = [
-  { icon: Upload, text: '이미지 업로드 중...', duration: 20 },
-  { icon: ScanFace, text: '피부 타입 분석 중...', duration: 30 },
-  { icon: Sparkles, text: '문제점 감지 중...', duration: 25 },
-  { icon: CheckCircle2, text: '맞춤 솔루션 추천 중...', duration: 25 },
+const features = [
+  { emoji: '🔮', name: '관상보기', desc: '얼굴로 알아보는 나의 운명과 성격', color: 'from-violet-500 to-purple-600' },
+  { emoji: '🐯', name: '동물상', desc: '나를 닮은 동물이 뭔지 알아봐요', color: 'from-amber-500 to-orange-600' },
+  { emoji: '🧬', name: 'MBTI 매칭', desc: '얼굴에서 읽는 나의 MBTI 유형', color: 'from-cyan-500 to-blue-600' },
+  { emoji: '📸', name: 'AI 프로필', desc: '10가지 스타일의 AI 프로필 사진', color: 'from-rose-500 to-pink-600' },
+  { emoji: '⏳', name: '나이 시뮬레이션', desc: '10년 후, 20년 후 내 얼굴은?', color: 'from-emerald-500 to-teal-600' },
+  { emoji: '✨', name: '전생 / 후생', desc: '나는 전생에 누구였을까?', color: 'from-indigo-500 to-violet-600' },
 ]
 
 function dataUrlToFile(dataUrl: string, filename: string): File {
@@ -30,14 +32,19 @@ function dataUrlToFile(dataUrl: string, filename: string): File {
 
 export default function AnalysisLoadingPage() {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(0)
+  const { member, isLoaded, fetchMember } = useMemberStore()
   const [progress, setProgress] = useState(0)
+  const [featureIdx, setFeatureIdx] = useState(0)
   const apiCalledRef = useRef(false)
   const analysisIdRef = useRef<number | null>(null)
   const [completed, setCompleted] = useState(false)
 
-  // 1. 이미지 업로드 → PENDING 상태로 즉시 반환 → long polling 시작
   useEffect(() => {
+    if (!isLoaded) fetchMember()
+  }, [isLoaded, fetchMember])
+
+  useEffect(() => {
+    if (!isLoaded) return
     if (apiCalledRef.current) return
     apiCalledRef.current = true
 
@@ -51,10 +58,16 @@ export default function AnalysisLoadingPage() {
     const file = dataUrlToFile(imageData, 'skin-analysis.jpg')
     sessionStorage.removeItem('capturedImage')
 
-    skinAnalysisApi
-      .analyze(file)
+    const apiCall = member
+      ? skinAnalysisApi.analyze(file)
+      : skinAnalysisApi.analyzeAnonymous(file)
+
+    apiCall
       .then((result) => {
         analysisIdRef.current = result.id
+        if ('token' in result && result.token) {
+          sessionStorage.setItem('analysisToken', result.token)
+        }
         startPolling(result.id)
       })
       .catch((err) => {
@@ -62,16 +75,14 @@ export default function AnalysisLoadingPage() {
         toast.error(err.response?.data?.message || '이미지 업로드에 실패했습니다.')
         router.replace('/camera')
       })
-  }, [router])
+  }, [isLoaded, member, router]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 2. Long polling: 2.5초마다 상태 조회
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startPolling = (id: number) => {
     pollingRef.current = setInterval(async () => {
       try {
         const status = await skinAnalysisApi.getStatus(id)
-
         if (status.status === 'COMPLETED') {
           stopPolling()
           setCompleted(true)
@@ -80,7 +91,6 @@ export default function AnalysisLoadingPage() {
           toast.error(status.errorMessage || '피부 분석에 실패했습니다.')
           router.replace('/camera')
         }
-        // PENDING, PROCESSING → 계속 대기
       } catch (err) {
         console.error('Polling error:', err)
         stopPolling()
@@ -97,22 +107,10 @@ export default function AnalysisLoadingPage() {
     }
   }
 
-  useEffect(() => {
-    return () => stopPolling()
-  }, [])
+  useEffect(() => () => stopPolling(), [])
 
-  // 3. 프로그레스 애니메이션 - 지수 감쇠 커브 + 랜덤 점프로 다이나믹하게
   useEffect(() => {
     if (completed) return
-
-    // progress 구간별 step 인덱스
-    const getStep = (p: number) => {
-      if (p < 22) return 0
-      if (p < 50) return 1
-      if (p < 72) return 2
-      return 3
-    }
-
     const MAX = 88
     const startTime = Date.now()
     let extraProgress = 0
@@ -123,22 +121,13 @@ export default function AnalysisLoadingPage() {
     const tick = () => {
       const now = Date.now()
       const secs = (now - startTime) / 1000
-
-      // 1.5~3.5초마다 1~4% 랜덤 점프 (작업이 진행되는 느낌)
       if (now - lastJumpTime >= nextJumpDelay) {
         extraProgress = Math.min(extraProgress + 1 + Math.random() * 3, 18)
         lastJumpTime = now
         nextJumpDelay = 1500 + Math.random() * 2000
       }
-
-      // 지수 감쇠 기반 베이스: 빠르게 시작 → 점점 감속 → MAX에 점근
-      // t=5s≈39%, t=10s≈63%, t=15s≈78%, t=20s≈86%, 절대 MAX에 도달 안 함
-      const base = MAX * (1 - Math.exp(-secs / 10))
-      const p = Math.min(base + extraProgress, MAX)
-
+      const p = Math.min(MAX * (1 - Math.exp(-secs / 10)) + extraProgress, MAX)
       setProgress(p)
-      setCurrentStep(getStep(p))
-
       rafId = requestAnimationFrame(tick)
     }
 
@@ -146,52 +135,82 @@ export default function AnalysisLoadingPage() {
     return () => cancelAnimationFrame(rafId)
   }, [completed])
 
-  // 4. COMPLETED 시 100% → 결과 페이지 이동
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFeatureIdx((i) => (i + 1) % features.length)
+    }, FEATURE_INTERVAL)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     if (!completed) return
-
-    setCurrentStep(steps.length - 1)
     setProgress(100)
-
     const timeout = setTimeout(() => {
-      router.push(`/analysis-result?id=${analysisIdRef.current}`)
+      const token = sessionStorage.getItem('analysisToken')
+      sessionStorage.removeItem('analysisToken')
+      const url = token
+        ? `/analysis-result?id=${analysisIdRef.current}&token=${token}`
+        : `/analysis-result?id=${analysisIdRef.current}`
+      router.push(url)
     }, 600)
-
     return () => clearTimeout(timeout)
   }, [completed, router])
 
-  const CurrentIcon = steps[currentStep].icon
+  const feature = features[featureIdx]
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <motion.div key={currentStep} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-12 flex justify-center">
-          <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="relative">
-            <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center">
-              <CurrentIcon className="w-16 h-16 text-white" />
-            </div>
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute inset-0 rounded-full bg-white/30"
-            />
-          </motion.div>
-        </motion.div>
-
-        <div className="mb-8">
-          <Progress value={progress} className="h-2 bg-white/30" />
-          <p className="text-white text-center mt-3 font-medium">{Math.round(progress)}%</p>
+    <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-between px-6 pt-16 pb-12">
+      {/* 상단: 진행 바 */}
+      <div className="w-full max-w-sm">
+        <div className="flex justify-between items-center mb-2">
+          <p className="text-white/50 text-xs">피부 분석 중...</p>
+          <p className="text-white/40 text-xs">{Math.round(progress)}%</p>
         </div>
-
-        <motion.div key={`text-${currentStep}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <p className="text-white text-xl font-semibold mb-2">{steps[currentStep].text}</p>
-          <p className="text-white/80 text-sm">잠시만 기다려주세요</p>
-        </motion.div>
-
-        <div className="mt-12 text-center">
-          <p className="text-white/60 text-xs">예상 소요 시간: 10-30초</p>
+        <div className="w-full bg-white/10 rounded-full h-0.5">
+          <motion.div
+            className="h-0.5 rounded-full bg-white"
+            animate={{ width: `${progress}%` }}
+            transition={{ ease: 'easeOut', duration: 0.3 }}
+          />
         </div>
       </div>
+
+      {/* 중단: 기능 홍보 카드 */}
+      <div className="w-full max-w-sm flex-1 flex flex-col items-center justify-center gap-5">
+        <p className="text-white/30 text-xs uppercase tracking-widest">이런 기능도 있어요</p>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={featureIdx}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.35 }}
+            className="w-full"
+          >
+            <div className={`rounded-2xl bg-gradient-to-br ${feature.color} p-7`}>
+              <div className="text-5xl mb-5">{feature.emoji}</div>
+              <p className="text-white text-xl font-bold mb-1.5">{feature.name}</p>
+              <p className="text-white/75 text-sm leading-relaxed">{feature.desc}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* 도트 인디케이터 */}
+        <div className="flex gap-1.5">
+          {features.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === featureIdx ? 'w-4 bg-white' : 'w-1.5 bg-white/20'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 하단 */}
+      <p className="text-white/20 text-xs">분석 완료 시 자동으로 이동합니다</p>
     </div>
   )
 }

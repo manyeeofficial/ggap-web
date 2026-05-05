@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { Sparkles, ChevronRight } from 'lucide-react'
 import { useMemberStore } from '@/lib/store/member-store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { SocialLoginSheet } from '@/app/components/SocialLoginSheet'
 
 const features = [
   {
@@ -17,17 +18,17 @@ const features = [
     bgGradient: 'from-violet-50 to-purple-50',
     border: 'border-violet-100',
   },
-  {
-    id: 'animal-face',
-    emoji: '🦊',
-    title: '동물상',
-    description: '내 얼굴은 어떤 동물상일까?\n귀여운 동물 습성 분석',
-    path: '/studio/animal-face',
-    available: true,
-    gradient: 'from-orange-400 to-rose-500',
-    bgGradient: 'from-orange-50 to-rose-50',
-    border: 'border-orange-100',
-  },
+  // {
+  //   id: 'animal-face',
+  //   emoji: '🦊',
+  //   title: '동물상',
+  //   description: '내 얼굴은 어떤 동물상일까?\n귀여운 동물 습성 분석',
+  //   path: '/studio/animal-face',
+  //   available: true,
+  //   gradient: 'from-orange-400 to-rose-500',
+  //   bgGradient: 'from-orange-50 to-rose-50',
+  //   border: 'border-orange-100',
+  // },
   {
     id: 'mbti-match',
     emoji: '🧬',
@@ -39,17 +40,17 @@ const features = [
     bgGradient: 'from-indigo-50 to-violet-50',
     border: 'border-indigo-100',
   },
-  {
-    id: 'ai-profile',
-    emoji: '🎨',
-    title: 'AI 프로필',
-    description: '웹툰, 수채화, 팝아트...\n나만의 AI 프로필 사진',
-    path: '/studio/ai-profile',
-    available: true,
-    gradient: 'from-pink-500 to-rose-600',
-    bgGradient: 'from-pink-50 to-rose-50',
-    border: 'border-pink-100',
-  },
+  // {
+  //   id: 'ai-profile',
+  //   emoji: '🎨',
+  //   title: 'AI 프로필',
+  //   description: '웹툰, 수채화, 팝아트...\n나만의 AI 프로필 사진',
+  //   path: '/studio/ai-profile',
+  //   available: true,
+  //   gradient: 'from-pink-500 to-rose-600',
+  //   bgGradient: 'from-pink-50 to-rose-50',
+  //   border: 'border-pink-100',
+  // },
   {
     id: 'age-simulation',
     emoji: '⏳',
@@ -61,40 +62,54 @@ const features = [
     bgGradient: 'from-amber-50 to-orange-50',
     border: 'border-amber-100',
   },
-  {
-    id: 'past-life',
-    emoji: '📜',
-    title: '전생 보기',
-    description: 'AI가 사진으로 분석한\n나의 전생 이야기',
-    path: '/studio/past-life',
-    available: true,
-    gradient: 'from-amber-500 to-orange-600',
-    bgGradient: 'from-amber-50 to-orange-50',
-    border: 'border-amber-100',
-  },
-  {
-    id: 'future-life',
-    emoji: '🚀',
-    title: '후생 보기',
-    description: 'AI가 사진으로 그려낸\n나의 미래 모습',
-    path: '/studio/future-life',
-    available: true,
-    gradient: 'from-cyan-500 to-violet-600',
-    bgGradient: 'from-cyan-50 to-violet-50',
-    border: 'border-cyan-100',
-  },
+  // {
+  //   id: 'past-life',
+  //   emoji: '📜',
+  //   title: '전생 보기',
+  //   description: 'AI가 사진으로 분석한\n나의 전생 이야기',
+  //   path: '/studio/past-life',
+  //   available: true,
+  //   gradient: 'from-amber-500 to-orange-600',
+  //   bgGradient: 'from-amber-50 to-orange-50',
+  //   border: 'border-amber-100',
+  // },
+  // {
+  //   id: 'future-life',
+  //   emoji: '🚀',
+  //   title: '후생 보기',
+  //   description: 'AI가 사진으로 그려낸\n나의 미래 모습',
+  //   path: '/studio/future-life',
+  //   available: true,
+  //   gradient: 'from-cyan-500 to-violet-600',
+  //   bgGradient: 'from-cyan-50 to-violet-50',
+  //   border: 'border-cyan-100',
+  // },
 ]
 
 export default function StudioPage() {
   const router = useRouter()
-  const { isLoaded, fetchMember } = useMemberStore()
+  const { member, isLoaded, fetchMember } = useMemberStore()
+  const [loginSheetOpen, setLoginSheetOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoaded) fetchMember()
   }, [isLoaded, fetchMember])
 
+  useEffect(() => {
+    if (isLoaded && !member) setLoginSheetOpen(true)
+  }, [isLoaded, member])
+
+  const handleFeatureClick = (path: string) => {
+    if (!member) {
+      setLoginSheetOpen(true)
+      return
+    }
+    router.push(path)
+  }
+
   return (
     <div className="min-h-screen bg-white">
+      <SocialLoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
       {/* 헤더 */}
       <div className="px-5 pt-8 pb-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-1">
@@ -109,7 +124,7 @@ export default function StudioPage() {
           <button
             key={feature.id}
             disabled={!feature.available}
-            onClick={() => feature.path && router.push(feature.path)}
+            onClick={() => feature.path && handleFeatureClick(feature.path)}
             className={`w-full text-left rounded-3xl border p-5 ${feature.border} bg-gradient-to-br ${feature.bgGradient} ${
               feature.available
                 ? 'active:scale-[0.98] transition-transform'

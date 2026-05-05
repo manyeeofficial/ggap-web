@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Button } from '@/app/components/ui/button'
-import { ChevronLeft, RotateCcw, Share2, CheckCircle2, XCircle } from 'lucide-react'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { ageSimulationApi } from '@/lib/api'
 import type { AgeSimulation } from '@/lib/types'
@@ -18,8 +18,6 @@ function AgeSimulationResultContent() {
   const id = Number(searchParams.get('id'))
   const [result, setResult] = useState<AgeSimulation | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeImageTab, setActiveImageTab] = useState<'before' | 'after'>('after')
-  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -35,33 +33,6 @@ function AgeSimulationResultContent() {
       })
       .finally(() => setLoading(false))
   }, [id])
-
-  const handleShare = async () => {
-    if (!result?.generatedImageUrl) return
-    setSharing(true)
-    try {
-      const response = await fetch(result.generatedImageUrl)
-      const blob = await response.blob()
-      const file = new File([blob], 'age-simulation.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `${result.targetAge}세 모습 공개 ⏳` })
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'age-simulation.png'
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success('이미지를 저장했습니다.')
-      }
-    } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        toast.error('공유에 실패했습니다.')
-      }
-    } finally {
-      setSharing(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -80,9 +51,6 @@ function AgeSimulationResultContent() {
   }
 
   if (!result) return null
-
-  const displayImage =
-    activeImageTab === 'after' ? result.generatedImageUrl : result.sourceImageUrl
 
   return (
     <div className="min-h-screen bg-white pb-10">
@@ -109,41 +77,39 @@ function AgeSimulationResultContent() {
         )}
       </div>
 
-      {/* 이미지 비교 탭 */}
+      {/* 이미지 비교 — 좌우 나란히 */}
       {(result.sourceImageUrl || result.generatedImageUrl) && (
         <div className="px-5 mb-5">
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
-            {[
-              { id: 'before' as const, label: '현재' },
-              { id: 'after' as const, label: `${result.targetAge}세` },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveImageTab(tab.id)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  activeImageTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-400'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-3">
+            {/* 현재 */}
+            <div>
+              <p className="text-xs text-center text-gray-400 font-semibold mb-2">현재</p>
+              {result.sourceImageUrl ? (
+                <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-square shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={result.sourceImageUrl} alt="현재 모습" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="rounded-2xl bg-gray-100 aspect-square flex items-center justify-center">
+                  <p className="text-gray-300 text-xs">없음</p>
+                </div>
+              )}
+            </div>
+            {/* 시뮬레이션 */}
+            <div>
+              <p className="text-xs text-center text-amber-600 font-semibold mb-2">{result.targetAge}세</p>
+              {result.generatedImageUrl ? (
+                <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-square shadow-sm ring-2 ring-amber-400/60">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={result.generatedImageUrl} alt={`${result.targetAge}세 모습`} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="rounded-2xl bg-gray-100 aspect-square flex items-center justify-center">
+                  <p className="text-gray-300 text-xs">생성 중...</p>
+                </div>
+              )}
+            </div>
           </div>
-          {displayImage ? (
-            <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-square shadow-md">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={displayImage}
-                alt={activeImageTab === 'after' ? `${result.targetAge}세 모습` : '현재 모습'}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-gray-100 aspect-square flex items-center justify-center">
-              <p className="text-gray-400 text-sm">이미지 준비 중...</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -203,19 +169,11 @@ function AgeSimulationResultContent() {
       )}
 
       {/* 하단 버튼 */}
-      <div className="px-5 flex gap-3 mt-4">
-        <Button
-          onClick={handleShare}
-          disabled={sharing || !result.generatedImageUrl}
-          className="flex-1 h-12 rounded-2xl bg-amber-600 hover:bg-amber-700 font-semibold"
-        >
-          <Share2 className="w-4 h-4 mr-2" />
-          {sharing ? '공유 중...' : '공유하기'}
-        </Button>
+      <div className="px-5 mt-4">
         <Button
           onClick={() => router.push('/studio/age-simulation')}
           variant="outline"
-          className="flex-1 h-12 rounded-2xl border-gray-200 font-semibold"
+          className="w-full h-12 rounded-2xl border-gray-200 font-semibold"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           다시하기

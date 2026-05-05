@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Button } from '@/app/components/ui/button'
-import { ChevronLeft, RotateCcw, Share2 } from 'lucide-react'
+import { ChevronLeft, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { faceReadingApi } from '@/lib/api'
 import type { FaceReading, FacePart, FaceReadingType, FortunePeriod, OhaengType } from '@/lib/types'
@@ -127,195 +127,6 @@ function ScoreBar({ score }: { score: number }) {
   )
 }
 
-// ─── 공유 카드 그리기 ─────────────────────────────────
-
-async function drawFaceReadingShareCard(result: FaceReading): Promise<Blob> {
-  const S = 2
-  const W = 390 * S
-  const H = 580 * S
-
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
-
-  // 배경
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, H)
-  bgGrad.addColorStop(0, '#2e1065')
-  bgGrad.addColorStop(1, '#4c1d95')
-  ctx.fillStyle = bgGrad
-  ctx.fillRect(0, 0, W, H)
-
-  // 동양풍 장식선
-  ctx.strokeStyle = 'rgba(167,139,250,0.25)'
-  ctx.lineWidth = S
-  ctx.strokeRect(24 * S, 24 * S, (390 - 48) * S, (580 - 48) * S)
-
-  const pad = 40 * S
-  let y = 60 * S
-
-  // 앱 이름
-  ctx.font = `600 ${13 * S}px -apple-system, sans-serif`
-  ctx.fillStyle = 'rgba(196,181,253,0.8)'
-  ctx.textAlign = 'left'
-  ctx.fillText('ㅇㄱㄱ 관상보기', pad, y)
-  y += 52 * S
-
-  // 메인 카피 — "나는 ○○할 상"
-  const caption = result.shareCaption ?? (result.overallType ? TYPE_LABEL[result.overallType] : '특별한 관상')
-  const mainCopy = `"나는 ${caption}"`
-  ctx.font = `700 ${22 * S}px -apple-system, sans-serif`
-  ctx.fillStyle = '#ffffff'
-
-  // 긴 텍스트 줄 바꿈
-  const maxWidth = (390 - 80) * S
-  const words = mainCopy.split(' ')
-  let line = ''
-  const lines: string[] = []
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line)
-      line = word
-    } else {
-      line = test
-    }
-  }
-  if (line) lines.push(line)
-  for (const l of lines) {
-    ctx.fillText(l, pad, y)
-    y += 32 * S
-  }
-  y += 8 * S
-
-  // 유형명 서브
-  if (result.overallType) {
-    ctx.font = `500 ${14 * S}px -apple-system, sans-serif`
-    ctx.fillStyle = 'rgba(196,181,253,0.9)'
-    ctx.fillText(`🔮 ${TYPE_LABEL[result.overallType]}`, pad, y)
-    y += 40 * S
-  }
-
-  // 구분선
-  ctx.strokeStyle = 'rgba(167,139,250,0.3)'
-  ctx.lineWidth = S
-  ctx.beginPath()
-  ctx.moveTo(pad, y)
-  ctx.lineTo(W - pad, y)
-  ctx.stroke()
-  y += 28 * S
-
-  // 인생 그래프 (미니 라인)
-  const earlyScore = result.fortunes.find(f => f.period === 'EARLY')?.score ?? 0
-  const midScore = result.fortunes.find(f => f.period === 'MID')?.score ?? 0
-  const lateScore = result.fortunes.find(f => f.period === 'LATE')?.score ?? 0
-  const graphPoints = [
-    { label: '초년', score: earlyScore },
-    { label: '중년', score: midScore },
-    { label: '말년', score: lateScore },
-  ]
-
-  ctx.font = `500 ${11 * S}px -apple-system, sans-serif`
-  ctx.fillStyle = 'rgba(196,181,253,0.7)'
-  ctx.fillText('인생 그래프', pad, y)
-  y += 16 * S
-
-  const gW = (390 - 80) * S
-  const gH = 50 * S
-  const gX = pad
-  const gY = y
-
-  // 그래프 배경 라인
-  ctx.strokeStyle = 'rgba(167,139,250,0.15)'
-  ctx.lineWidth = S * 0.5
-  for (const perc of [0.25, 0.5, 0.75]) {
-    const lineY = gY + gH * (1 - perc)
-    ctx.beginPath()
-    ctx.moveTo(gX, lineY)
-    ctx.lineTo(gX + gW, lineY)
-    ctx.stroke()
-  }
-
-  // 라인
-  ctx.strokeStyle = 'rgba(167,139,250,0.9)'
-  ctx.lineWidth = 2 * S
-  ctx.lineJoin = 'round'
-  ctx.beginPath()
-  graphPoints.forEach(({ score }, i) => {
-    const px = gX + (i / (graphPoints.length - 1)) * gW
-    const py = gY + gH * (1 - score / 100)
-    if (i === 0) ctx.moveTo(px, py)
-    else ctx.lineTo(px, py)
-  })
-  ctx.stroke()
-
-  // 점 + 라벨
-  graphPoints.forEach(({ label, score }, i) => {
-    const px = gX + (i / (graphPoints.length - 1)) * gW
-    const py = gY + gH * (1 - score / 100)
-    ctx.fillStyle = '#a78bfa'
-    ctx.beginPath()
-    ctx.arc(px, py, 4 * S, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.font = `600 ${10 * S}px -apple-system, sans-serif`
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'
-    ctx.textAlign = 'center'
-    ctx.fillText(`${label} ${score}`, px, py - 8 * S)
-  })
-  ctx.textAlign = 'left'
-  y += gH + 36 * S
-
-  // 구분선
-  ctx.strokeStyle = 'rgba(167,139,250,0.3)'
-  ctx.lineWidth = S
-  ctx.beginPath()
-  ctx.moveTo(pad, y)
-  ctx.lineTo(W - pad, y)
-  ctx.stroke()
-  y += 28 * S
-
-  // 총운 점수 + 행운 색/숫자
-  const overallScore = result.fortunes.find(f => f.period === 'OVERALL')?.score ?? 0
-  ctx.font = `700 ${18 * S}px -apple-system, sans-serif`
-  ctx.fillStyle = '#ffffff'
-  ctx.fillText(`총운 ${overallScore}점`, pad, y)
-  y += 28 * S
-
-  const infoItems: string[] = []
-  if (result.luckyColor) infoItems.push(`🎨 ${result.luckyColor}`)
-  if (result.luckyNumber != null) infoItems.push(`🔢 ${result.luckyNumber}`)
-  if (infoItems.length > 0) {
-    ctx.font = `500 ${13 * S}px -apple-system, sans-serif`
-    ctx.fillStyle = 'rgba(196,181,253,0.85)'
-    ctx.fillText(infoItems.join('  '), pad, y)
-    y += 36 * S
-  }
-
-  // 하단 CTA
-  y = H - 52 * S
-  ctx.font = `500 ${12 * S}px -apple-system, sans-serif`
-  ctx.fillStyle = 'rgba(196,181,253,0.6)'
-  ctx.fillText('나도 해보기 → ggap.ai', pad, y)
-
-  // 워터마크
-  const WM = '077.co.kr'
-  ctx.font = `600 ${12 * S}px -apple-system, sans-serif`
-  const wmW = ctx.measureText(WM).width
-  const wmX = W - wmW - 12 * S
-  const wmY = 12 * S + 14 * S
-  ctx.fillStyle = 'rgba(0,0,0,0.4)'
-  ctx.fillText(WM, wmX + S, wmY + S)
-  ctx.fillStyle = 'rgba(255,255,255,0.7)'
-  ctx.fillText(WM, wmX, wmY)
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error('toBlob failed'))),
-      'image/png'
-    )
-  })
-}
-
 // ─── 메인 컴포넌트 ────────────────────────────────────
 
 function FaceReadingResultContent() {
@@ -325,7 +136,6 @@ function FaceReadingResultContent() {
   const [result, setResult] = useState<FaceReading | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<FortunePeriod>('OVERALL')
-  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -341,32 +151,6 @@ function FaceReadingResultContent() {
       })
       .finally(() => setLoading(false))
   }, [id])
-
-  const handleShare = async () => {
-    if (!result) return
-    setSharing(true)
-    try {
-      const blob = await drawFaceReadingShareCard(result)
-      const file = new File([blob], 'face-reading.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: '나의 관상 결과 공개 🔮' })
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'face-reading.png'
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success('이미지를 저장했습니다.')
-      }
-    } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        toast.error('공유에 실패했습니다.')
-      }
-    } finally {
-      setSharing(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -482,6 +266,11 @@ function FaceReadingResultContent() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* 브랜딩 */}
+          <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-end">
+            <p className="text-white/30 text-xs tracking-wide">ggap.ai</p>
           </div>
         </div>
       </div>
@@ -647,19 +436,11 @@ function FaceReadingResultContent() {
         )}
 
         {/* 하단 버튼 */}
-        <div className="flex gap-3 mt-6">
-          <Button
-            onClick={handleShare}
-            disabled={sharing}
-            className="flex-1 h-12 rounded-2xl bg-violet-600 hover:bg-violet-700 font-semibold"
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            {sharing ? '생성 중...' : '공유하기'}
-          </Button>
+        <div className="mt-6">
           <Button
             onClick={() => router.push('/studio/face-reading')}
             variant="outline"
-            className="flex-1 h-12 rounded-2xl border-gray-200 font-semibold"
+            className="w-full h-12 rounded-2xl border-gray-200 font-semibold"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             다시하기

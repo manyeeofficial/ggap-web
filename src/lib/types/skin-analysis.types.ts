@@ -1,5 +1,12 @@
 // Skin Analysis Request/Response Types
 
+// POST /skin-analysis/anonymous 응답
+export interface AnonymousSkinAnalysis {
+  id: number
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  token: string
+}
+
 // GET /skin-analysis/{id}/status 응답
 export interface SkinAnalysisStatus {
   id: number

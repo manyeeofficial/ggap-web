@@ -8,7 +8,7 @@ import { Input } from '@/app/components/ui/input'
 import { Label } from '@/app/components/ui/label'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { memberApi } from '@/lib/api'
+import { memberApi, skinAnalysisApi } from '@/lib/api'
 import { useMemberStore } from '@/lib/store/member-store'
 
 function KakaoCallbackContent() {
@@ -45,7 +45,7 @@ function KakaoCallbackContent() {
     const code = searchParams.get('code')
     if (!code) {
       toast.error('카카오 인증 코드가 없습니다.')
-      router.replace('/login')
+      router.replace('/')
       return
     }
 
@@ -65,15 +65,29 @@ function KakaoCallbackContent() {
           setStatus('phone')
         } else {
           await fetchMember()
-          router.replace('/')
+          const redirect = await claimPendingAnalysis()
+          router.replace(redirect ?? '/')
         }
       })
       .catch((err) => {
         console.error('Kakao callback error:', err)
         toast.error(err.response?.data?.message || '카카오 로그인에 실패했습니다.')
-        router.replace('/login')
+        router.replace('/')
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const claimPendingAnalysis = async (): Promise<string | null> => {
+    const pending = localStorage.getItem('pendingAnalysisClaim')
+    if (!pending) return null
+    localStorage.removeItem('pendingAnalysisClaim')
+    try {
+      const { id, token } = JSON.parse(pending)
+      await skinAnalysisApi.claimAnalysis(Number(id), token)
+      return `/analysis-result?id=${id}`
+    } catch {
+      return null
+    }
+  }
 
   const handleCompleteSignup = async () => {
     setIsLoading(true)
@@ -90,7 +104,8 @@ function KakaoCallbackContent() {
 
       await fetchMember()
       toast.success('카카오 회원가입이 완료되었습니다.')
-      router.replace('/')
+      const redirect = await claimPendingAnalysis()
+      router.replace(redirect ?? '/')
     } catch (err: any) {
       toast.error(err.response?.data?.message || '회원가입에 실패했습니다.')
     } finally {
@@ -112,7 +127,7 @@ function KakaoCallbackContent() {
   return (
     <div className="min-h-screen bg-white">
       <div className="p-6 flex items-center border-b">
-        <button onClick={() => router.replace('/login')}>
+        <button onClick={() => router.replace('/')}>
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h1 className="flex-1 text-center text-lg font-semibold">카카오 회원가입</h1>
@@ -221,7 +236,7 @@ function KakaoCallbackContent() {
             type="button"
             variant="outline"
             className="w-full h-12"
-            onClick={() => router.replace('/login')}
+            onClick={() => router.replace('/')}
             disabled={isLoading}
           >
             취소

@@ -6,6 +6,8 @@ import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Progress } from '@/app/components/ui/progress'
 import { Edit, Camera } from 'lucide-react'
+import { SocialLoginSheet } from '@/app/components/SocialLoginSheet'
+import { useMemberStore } from '@/lib/store/member-store'
 import {
   LineChart,
   Line,
@@ -91,6 +93,8 @@ function formatShortDate(dateStr: string): string {
 
 export default function MySkinPage() {
   const router = useRouter()
+  const { member, isLoaded, fetchMember } = useMemberStore()
+  const [loginSheetOpen, setLoginSheetOpen] = useState(false)
   const [latestAnalysis, setLatestAnalysis] = useState<SkinAnalysis | null>(null)
   const [prevAnalysis, setPrevAnalysis] = useState<SkinAnalysis | null>(null)
   const [trendData, setTrendData] = useState<{ date: string; value: number }[]>([])
@@ -98,6 +102,16 @@ export default function MySkinPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isLoaded) fetchMember()
+  }, [isLoaded, fetchMember])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    if (!member) {
+      setLoading(false)
+      setLoginSheetOpen(true)
+      return
+    }
     Promise.all([skinAnalysisApi.getList(0, 10), skinProfileApi.get()])
       .then(([analyses, profile]) => {
         const completed = analyses.filter((a) => a.status === 'COMPLETED')
@@ -117,7 +131,15 @@ export default function MySkinPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [isLoaded, member])
+
+  const handleProtectedNav = (path: string) => {
+    if (!member) {
+      setLoginSheetOpen(true)
+      return
+    }
+    router.push(path)
+  }
 
   if (loading) {
     return (
@@ -152,6 +174,8 @@ export default function MySkinPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SocialLoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
+
       {/* 헤더 */}
       <div className="px-5 pt-8 pb-4 border-b border-gray-100">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">내 스킨</h1>
@@ -336,7 +360,7 @@ export default function MySkinPage() {
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">스킨 프로필</p>
             <button
-              onClick={() => router.push('/skin-profile-edit')}
+              onClick={() => handleProtectedNav('/skin-profile-edit')}
               className="flex items-center gap-1 text-sm font-medium text-indigo-600"
             >
               <Edit className="w-3 h-3" />편집
@@ -400,7 +424,7 @@ export default function MySkinPage() {
               <Button
                 variant="outline"
                 className="rounded-full"
-                onClick={() => router.push('/skin-profile-edit')}
+                onClick={() => handleProtectedNav('/skin-profile-edit')}
               >
                 <Edit className="w-4 h-4 mr-2" />프로필 작성하기
               </Button>

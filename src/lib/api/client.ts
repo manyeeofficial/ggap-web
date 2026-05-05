@@ -56,6 +56,9 @@ const PUBLIC_API_PATTERNS: Array<{ url: RegExp; method?: string }> = [
   { url: /^\/kakao-auth\// },                     // Kakao 인증
   { url: /^\/naver-auth\// },                     // Naver 인증
   { url: /^\/products\/trending$/, method: 'get' }, // 트렌딩 상품 (공개)
+  { url: /^\/skin-analysis\/anonymous$/, method: 'post' }, // 비회원 분석
+  { url: /^\/skin-analysis\/\d+\/status$/, method: 'get' }, // 분석 상태 폴링
+  { url: /^\/skin-analysis\/\d+$/, method: 'get' }, // 분석 결과 조회 (token 파라미터로 비회원 접근)
 ]
 
 function isPublicApiUrl(url?: string, method?: string): boolean {
@@ -185,7 +188,7 @@ class ApiClient {
   private redirectToLogin() {
     if (typeof window !== 'undefined') {
       deleteCookies()
-      window.location.href = '/login'
+      window.location.href = '/'
     }
   }
 }

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Button } from '@/app/components/ui/button'
-import { ChevronLeft, RotateCcw, Share2, CheckCircle2, XCircle } from 'lucide-react'
+import { ChevronLeft, RotateCcw, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { mbtiMatchApi } from '@/lib/api'
 import type { MbtiMatch, MatchLevel, MbtiAxis } from '@/lib/types'
@@ -49,7 +49,6 @@ function MbtiMatchResultContent() {
   const id = Number(searchParams.get('id'))
   const [result, setResult] = useState<MbtiMatch | null>(null)
   const [loading, setLoading] = useState(true)
-  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -65,27 +64,6 @@ function MbtiMatchResultContent() {
       })
       .finally(() => setLoading(false))
   }, [id])
-
-  const handleShare = async () => {
-    if (!result) return
-    setSharing(true)
-    try {
-      const matchLabel = result.matchLevel ? MATCH_LEVEL_LABEL[result.matchLevel] : ''
-      const text = `나의 MBTI ${result.mbti}은 ${matchLabel}! ${result.overallMatchRate ?? 0}% 일치 — ggap.ai`
-      if (navigator.share) {
-        await navigator.share({ text, title: '나의 MBTI × 얼굴 결과 🧬' })
-      } else {
-        await navigator.clipboard.writeText(text)
-        toast.success('결과가 클립보드에 복사됐어요.')
-      }
-    } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        toast.error('공유에 실패했습니다.')
-      }
-    } finally {
-      setSharing(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -160,6 +138,11 @@ function MbtiMatchResultContent() {
               <p className="text-white text-sm text-center">"{result.wittyOneLiner}"</p>
             </div>
           )}
+
+          {/* 브랜딩 */}
+          <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-end">
+            <p className="text-white/30 text-xs tracking-wide">ggap.ai</p>
+          </div>
         </div>
       </div>
 
@@ -201,19 +184,11 @@ function MbtiMatchResultContent() {
       )}
 
       {/* 하단 버튼 */}
-      <div className="px-5 flex gap-3 mt-4">
-        <Button
-          onClick={handleShare}
-          disabled={sharing}
-          className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-semibold"
-        >
-          <Share2 className="w-4 h-4 mr-2" />
-          {sharing ? '공유 중...' : '공유하기'}
-        </Button>
+      <div className="px-5 mt-4">
         <Button
           onClick={() => router.push('/studio/mbti-match')}
           variant="outline"
-          className="flex-1 h-12 rounded-2xl border-gray-200 font-semibold"
+          className="w-full h-12 rounded-2xl border-gray-200 font-semibold"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           다시하기

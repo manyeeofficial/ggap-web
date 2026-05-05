@@ -7,6 +7,7 @@ import { Skeleton } from '@/app/components/ui/skeleton'
 import { Camera, Lock, Sparkles, ChevronRight } from 'lucide-react'
 import { rankingApi, skinAnalysisApi } from '@/lib/api'
 import TrendingProductsWidget from '@/app/components/TrendingProductsWidget'
+import { SocialLoginSheet } from '@/app/components/SocialLoginSheet'
 import { useMemberStore } from '@/lib/store/member-store'
 import type { RankingResult, SkinAnalysis, SkinType, TroubleType } from '@/lib/types'
 
@@ -58,6 +59,7 @@ export default function HomePage() {
   const [recentAnalyses, setRecentAnalyses] = useState<SkinAnalysis[]>([])
   const [ranking, setRanking] = useState<RankingResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loginSheetOpen, setLoginSheetOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoaded) fetchMember()
@@ -84,21 +86,18 @@ export default function HomePage() {
   }, [isLoaded, member])
 
   const handleAnalysisStart = () => {
-    if (!member) {
-      router.push('/login')
-      return
-    }
     router.push('/camera')
   }
 
   return (
     <div className="bg-white">
+      <SocialLoginSheet open={loginSheetOpen} onOpenChange={setLoginSheetOpen} />
       {/* Hero */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 px-5 pt-10 pb-8">
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-2xl font-bold text-white">ㅇㄱㄱ - 얼굴값 분석</h1>
         </div>
-        <p className="text-white/70 text-sm mb-6">얼굴값 췍! 상위 몇 %인지 궁금하다면?</p>
+        <p className="text-white/70 text-sm mb-6">로그인 없이 바로 분석해보세요 ✨</p>
         <Button
           onClick={handleAnalysisStart}
           className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-50 font-semibold rounded-2xl shadow-none"
@@ -171,7 +170,7 @@ export default function HomePage() {
                 로그인하면 전국 얼굴값 랭킹에서<br />내 순위를 확인할 수 있어요
               </p>
               <button
-                onClick={() => router.push('/login')}
+                onClick={() => setLoginSheetOpen(true)}
                 className="mt-1 px-4 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-full"
               >
                 로그인하기
@@ -254,7 +253,7 @@ export default function HomePage() {
                 로그인하면 내 피부 분석 기록을<br />저장하고 변화를 추적할 수 있어요
               </p>
               <button
-                onClick={() => router.push('/login')}
+                onClick={() => setLoginSheetOpen(true)}
                 className="mt-1 px-4 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-full"
               >
                 로그인하기

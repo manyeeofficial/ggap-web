@@ -149,9 +149,9 @@ export default function SettingsPage() {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="w-full flex items-center gap-3 py-3 text-rose-500 hover:text-rose-600 transition-colors">
-                <UserX className="w-4 h-4" />
-                <span className="font-medium">회원탈퇴</span>
+              <button className="w-full flex items-center gap-2 py-2 text-gray-400 hover:text-rose-400 transition-colors">
+                <UserX className="w-3.5 h-3.5" />
+                <span className="text-xs">회원탈퇴</span>
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                     } finally {
                       deleteCookies()
                       clearMember()
-                      router.push('/login')
+                      router.push('/')
                     }
                   }}
                 >

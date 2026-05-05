@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="h-full bg-gray-50 flex flex-col">
         <div className="bg-white border-b p-6">
-          <button onClick={() => router.push('/login')} className="w-10 h-10 flex items-center justify-center">
+          <button onClick={() => router.push('/')} className="w-10 h-10 flex items-center justify-center">
             <ArrowLeft className="w-6 h-6" />
           </button>
         </div>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
               </ul>
             </div>
             <div className="space-y-3">
-              <Button onClick={() => router.push('/login')} className="w-full bg-indigo-600 hover:bg-indigo-700">
+              <Button onClick={() => router.push('/')} className="w-full bg-indigo-600 hover:bg-indigo-700">
                 로그인으로 돌아가기
               </Button>
               <Button variant="outline" onClick={() => setIsSubmitted(false)} className="w-full">
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="h-full bg-gray-50 flex flex-col">
       <div className="bg-white border-b p-6">
-        <button onClick={() => router.push('/login')} className="w-10 h-10 flex items-center justify-center">
+        <button onClick={() => router.push('/')} className="w-10 h-10 flex items-center justify-center">
           <ArrowLeft className="w-6 h-6" />
         </button>
       </div>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/')}
               className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
             >
               로그인으로 돌아가기

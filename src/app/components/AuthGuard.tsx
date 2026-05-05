@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { deleteCookies } from '@/lib/api/client'
 
-const PUBLIC_PATHS = ['/', '/onboarding', '/login', '/mypage/apple-callback', '/auth/naver', '/auth/kakao', '/terms', '/privacy']
+const PUBLIC_PATHS = ['/', '/onboarding', '/mypage/apple-callback', '/auth/naver', '/auth/kakao', '/terms', '/privacy', '/camera', '/analysis-loading', '/analysis-result', '/studio', '/my-skin']
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -50,7 +50,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // accessToken이 없거나 만료된 경우 refreshToken으로 재발급 시도
     const refreshToken = getCookie('Refresh-token')
     if (!refreshToken) {
-      router.replace('/login')
+      router.replace('/')
       return
     }
 
@@ -63,12 +63,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         if (response.data?.accessToken) setAuthorized(true)
         else {
           deleteCookies()
-          router.replace('/login')
+          toast.error('로그인이 필요해요')
+          router.replace('/')
         }
       })
       .catch(() => {
         deleteCookies()
-        router.replace('/login')
+        toast.error('로그인이 필요해요')
+        router.replace('/')
       })
   }, [pathname])
 
