@@ -280,7 +280,7 @@ function CameraContent() {
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
           style={{ transform: mirrored ? 'scaleX(-1)' : 'none' }}
         />
 
