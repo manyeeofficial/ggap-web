@@ -89,25 +89,40 @@ class ApiClient {
       withCredentials: true,
     })
 
-    // Request interceptor - 토큰 사전 확인 후 Authorization 헤더 추가
+    // Request interceptor - 호출 전 토큰 만료를 판단해 필요 시 선제 갱신
     this.client.interceptors.request.use(
-      (config) => {
+      async (config) => {
         const accessToken = getCookie('Authorization')
         const refreshToken = getCookie('Refresh-token')
+        const isPublic = isPublicApiUrl(config.url, config.method)
 
-        if (!accessToken && !refreshToken && !isPublicApiUrl(config.url, config.method)) {
+        // 유효한 accessToken → 그대로 사용
+        if (accessToken && !isTokenExpired(accessToken)) {
+          config.headers.Authorization = `Bearer ${accessToken}`
+          return config
+        }
+
+        // accessToken 만료/부재 + refreshToken 존재 → 요청을 보내기 전에 선제 갱신
+        if (refreshToken) {
+          try {
+            const newToken = await this.performRefresh()
+            config.headers.Authorization = `Bearer ${newToken}`
+            return config
+          } catch {
+            // 갱신 실패: 공개 API는 인증 없이 진행, 그 외에는 로그인으로 이동
+            if (!isPublic) {
+              this.redirectToLogin()
+              return Promise.reject(new UnauthenticatedError())
+            }
+            return config
+          }
+        }
+
+        // 토큰이 전혀 없음
+        if (!isPublic) {
           this.redirectToLogin()
           return Promise.reject(new UnauthenticatedError())
         }
-
-        if (accessToken && !isTokenExpired(accessToken)) {
-          config.headers.Authorization = `Bearer ${accessToken}`
-        } else if (accessToken) {
-          // 만료된 accessToken이라도 헤더에 담아 보내면
-          // response interceptor가 refresh 후 재시도
-          config.headers.Authorization = `Bearer ${accessToken}`
-        }
-
         return config
       },
       (error) => Promise.reject(error)
@@ -142,51 +157,65 @@ class ApiClient {
     )
   }
 
-  private async handleTokenRefresh(originalRequest: any) {
+  /**
+   * 단일 비행(single-flight) 토큰 갱신.
+   * 동시에 여러 요청이 갱신을 필요로 해도 실제 refresh 호출은 1회만 수행하고 결과를 공유한다.
+   * 성공 시 새 accessToken 을 반환, 실패 시 throw (redirect 는 호출부에서 처리).
+   */
+  private performRefresh(): Promise<string> {
     if (this.isRefreshing) {
-      return new Promise((resolve) => {
-        this.refreshSubscribers.push((token: string) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          resolve(this.client(originalRequest))
-        })
+      return new Promise<string>((resolve, reject) => {
+        this.refreshSubscribers.push((token) =>
+          token ? resolve(token) : reject(new Error('Token refresh failed'))
+        )
       })
     }
 
     this.isRefreshing = true
-    const refreshToken = getCookie('Refresh-token')
 
-    if (!refreshToken) {
-      this.redirectToLogin()
-      return Promise.reject(new Error('No refresh token'))
-    }
-
-    try {
-      const response = await axios.post<RefreshTokenResponse>(
-        `${BASE_URL}/member/refresh-token`,
-        null,
-        {
-          headers: { 'Refresh-Token': refreshToken },
-          withCredentials: true,
-        }
-      )
-
-      const responseAccessToken = response.data?.accessToken
-
-      if (!responseAccessToken) {
-        this.redirectToLogin()
-        return Promise.reject(new Error('Token refresh failed'))
+    return (async () => {
+      const refreshToken = getCookie('Refresh-token')
+      if (!refreshToken) {
+        this.refreshSubscribers.forEach((cb) => cb(''))
+        this.refreshSubscribers = []
+        throw new Error('No refresh token')
       }
 
-      this.refreshSubscribers.forEach((cb) => cb(responseAccessToken))
-      this.refreshSubscribers = []
+      try {
+        const response = await axios.post<RefreshTokenResponse>(
+          `${BASE_URL}/member/refresh-token`,
+          null,
+          {
+            headers: { 'Refresh-Token': refreshToken },
+            withCredentials: true,
+          }
+        )
 
-      originalRequest.headers.Authorization = `Bearer ${responseAccessToken}`
+        const token = response.data?.accessToken
+        if (!token) throw new Error('Token refresh failed')
+
+        this.refreshSubscribers.forEach((cb) => cb(token))
+        this.refreshSubscribers = []
+        return token
+      } catch (e) {
+        this.refreshSubscribers.forEach((cb) => cb(''))
+        this.refreshSubscribers = []
+        throw e
+      } finally {
+        this.isRefreshing = false
+      }
+    })()
+  }
+
+  // Response interceptor 의 401 재시도 경로. 선제 갱신이 실패했거나 서버가 토큰을 무효화한 경우 대비.
+  private async handleTokenRefresh(originalRequest: any) {
+    try {
+      const token = await this.performRefresh()
+      originalRequest.headers.Authorization = `Bearer ${token}`
       return this.client(originalRequest)
-    } catch {
+    } catch (e) {
       this.redirectToLogin()
-      return Promise.reject(new Error('Token refresh failed'))
-    } finally {
-      this.isRefreshing = false
+      return Promise.reject(e)
     }
   }
 

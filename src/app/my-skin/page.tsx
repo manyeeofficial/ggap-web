@@ -329,7 +329,7 @@ export default function MySkinPage() {
                   <YAxis
                     tick={{ fontSize: 11 }}
                     stroke="#d1d5db"
-                    tickFormatter={(v) => `${v}만`}
+                    tickFormatter={(v) => (v >= 10000 ? `${(v / 10000).toFixed(1)}억` : `${v}만`)}
                   />
                   <Tooltip
                     contentStyle={{

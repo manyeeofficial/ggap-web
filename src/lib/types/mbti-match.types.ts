@@ -20,6 +20,8 @@ export interface MbtiMatch {
   axisMatches: AxisMatch[]
   story?: string
   wittyOneLiner?: string
+  faceCode?: string // 겉 인상 = 낯빛코드 (관상 결과가 있을 때만)
+  outerVsInnerNote?: string // 겉(낯빛코드) vs 속(MBTI) 갭 해설
   createdAt?: string
 }
 

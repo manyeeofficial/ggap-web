@@ -17,28 +17,6 @@ const features = [
     bgGradient: 'from-violet-50 to-purple-50',
     border: 'border-violet-100',
   },
-  {
-    id: 'past-life',
-    emoji: '📜',
-    title: '전생 보기',
-    description: 'AI가 사진으로 분석한\n나의 전생 이야기',
-    path: '/playground/past-life',
-    available: true,
-    gradient: 'from-amber-500 to-orange-600',
-    bgGradient: 'from-amber-50 to-orange-50',
-    border: 'border-amber-100',
-  },
-  {
-    id: 'future-life',
-    emoji: '🚀',
-    title: '후생 보기',
-    description: 'AI가 사진으로 그려낸\n나의 미래 모습',
-    path: '/playground/future-life',
-    available: true,
-    gradient: 'from-cyan-500 to-violet-600',
-    bgGradient: 'from-cyan-50 to-violet-50',
-    border: 'border-cyan-100',
-  },
 ]
 
 export default function PlaygroundPage() {

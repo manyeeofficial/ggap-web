@@ -73,6 +73,7 @@ export interface FaceReading {
   luckyNumber?: number
   shareCaption?: string
   ohaengData?: OhaengData
+  faceCode?: string // 낯빛코드(페이스코드) 3글자. 백엔드 산출값(canonical). 없으면 프론트에서 산출.
   createdAt?: string
 }
 

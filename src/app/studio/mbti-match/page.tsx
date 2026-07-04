@@ -76,7 +76,7 @@ function MbtiMatchContent() {
     memberApi.updateMbti(mbti).catch(() => {})
     try {
       const result = await mbtiMatchApi.create({ mbti })
-      router.push(`/studio/mbti-match/loading?id=${result.id}`)
+      router.push(`/loading?type=mbti-match&id=${result.id}`)
     } catch (err: unknown) {
       const status = (err as { response?: { status: number } })?.response?.status
       if (status === 403) {

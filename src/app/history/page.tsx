@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import Image from 'next/image'
-import { MoreVertical, Trash2, Camera, Eye } from 'lucide-react'
+import { MoreVertical, Trash2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,19 +14,15 @@ import {
 } from '@/app/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import {
-  skinAnalysisApi, faceReadingApi, pastLifeApi, futureLifeApi,
-  animalFaceApi, aiProfileApi, ageSimulationApi, mbtiMatchApi,
+  skinAnalysisApi, faceReadingApi, faceCodeApi, mbtiMatchApi, ageSimulationApi,
 } from '@/lib/api'
 import { UnauthenticatedError } from '@/lib/api/client'
 import type {
   SkinAnalysis, SkinType, TroubleType,
   FaceReading, FaceReadingType,
-  PastLife, PastEra,
-  FutureLife, RebirthCategory,
-  AnimalFace, AnimalType,
-  AiProfile, ProfileStyle,
-  AgeSimulation,
+  FaceCodeAnalysis,
   MbtiMatch, MatchLevel,
+  AgeSimulation,
 } from '@/lib/types'
 
 // ─── 레이블 맵 ───────────────────────────────────────────
@@ -50,43 +46,6 @@ const FACE_READING_TYPE_LABEL: Record<FaceReadingType, string> = {
   PEOPLE_LUCK: '인복 관상', OFFICIAL: '관록 관상', NOBLE: '귀인 관상', PEACH_BLOSSOM: '도화 관상',
   LONGEVITY: '장수 관상', VIRTUE: '복덕 관상', GUARDIAN: '수호자형 관상', ENTREPRENEUR: '창업가형 관상',
   DIPLOMAT: '외교관형 관상', HEALER: '치유자형 관상', ADVENTURER: '모험가형 관상', SAGE: '현자형 관상',
-}
-const PAST_ERA_LABEL: Record<PastEra, string> = {
-  THREE_KINGDOMS: '삼국시대', GORYEO: '고려시대', JOSEON: '조선시대',
-  RETRO_60S: '1960년대', RETRO_80S: '1980년대',
-  ANCIENT_EGYPT: '고대 이집트', ANCIENT_GREECE: '고대 그리스',
-  ROMAN_EMPIRE: '로마 제국', MEDIEVAL_EUROPE: '중세 유럽',
-  RENAISSANCE: '르네상스', SILK_ROAD: '실크로드',
-  OTTOMAN_EMPIRE: '오스만 제국', AFRICAN_KINGDOM: '아프리카 왕국',
-  VICTORIAN_ERA: '빅토리아 시대', JAZZ_AGE: '1920년대 미국',
-}
-const PAST_ERA_EMOJI: Record<PastEra, string> = {
-  THREE_KINGDOMS: '⚔️', GORYEO: '🏺', JOSEON: '📜',
-  RETRO_60S: '🎞️', RETRO_80S: '🎵',
-  ANCIENT_EGYPT: '🏛️', ANCIENT_GREECE: '🏺',
-  ROMAN_EMPIRE: '⚔️', MEDIEVAL_EUROPE: '🏰',
-  RENAISSANCE: '🎨', SILK_ROAD: '🐪',
-  OTTOMAN_EMPIRE: '🕌', AFRICAN_KINGDOM: '👑',
-  VICTORIAN_ERA: '🎩', JAZZ_AGE: '🎷',
-}
-const REBIRTH_CATEGORY_LABEL: Record<RebirthCategory, string> = {
-  HUMAN: '인간', ANIMAL: '동물', INSECT: '곤충', ALIEN: '외계인', PLANT: '식물', OBJECT: '무생물',
-}
-const REBIRTH_CATEGORY_EMOJI: Record<RebirthCategory, string> = {
-  HUMAN: '👤', ANIMAL: '🐾', INSECT: '🦋', ALIEN: '👽', PLANT: '🌿', OBJECT: '💎',
-}
-const ANIMAL_TYPE_LABEL: Record<AnimalType, string> = {
-  DOG: '강아지상', CAT: '고양이상', FOX: '여우상', RABBIT: '토끼상',
-  BEAR: '곰상', DEER: '사슴상', WOLF: '늑대상', HAMSTER: '햄스터상',
-}
-const ANIMAL_TYPE_EMOJI: Record<AnimalType, string> = {
-  DOG: '🐶', CAT: '🐱', FOX: '🦊', RABBIT: '🐰',
-  BEAR: '🐻', DEER: '🦌', WOLF: '🐺', HAMSTER: '🐹',
-}
-const PROFILE_STYLE_LABEL: Record<ProfileStyle, string> = {
-  ID_PHOTO: '증명사진', CELEBRITY: '셀럽', WEBTOON: '웹툰', GHIBLI: '지브리',
-  YEARBOOK: '졸업사진', POP_ART: '팝아트', WATERCOLOR: '수채화',
-  RETRO_90S: '90s 레트로', THREE_D_AVATAR: '3D 아바타', BW_CLASSIC: '흑백클래식',
 }
 const MATCH_LEVEL_LABEL: Record<MatchLevel, string> = {
   SPOILER: '얼굴이 스포일러', HONEST: '정직한 얼굴', SUBTLE: '겉바속촉',
@@ -126,6 +85,8 @@ function getMonthGroup(dateStr: string): string {
   return `${year}년 ${month}월`
 }
 
+// ─── 공통 컴포넌트 ─────────────────────────────────────────
+
 function LoadingSkeleton() {
   return (
     <div className="px-5 space-y-px">
@@ -155,9 +116,30 @@ function EmptyState({ emoji, title, desc, label, color, onClick }: {
   )
 }
 
-type AnalysisWithIndex = SkinAnalysis & { originalIndex: number }
+// 컴포넌트 내부 정의 금지 — 모듈 스코프에 배치
+function DeleteMenu({ onDelete }: { onDelete: (e: React.MouseEvent) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={onDelete}>
+          <Trash2 className="w-4 h-4 mr-2" />삭제
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
-// ─── 피부 분석 탭 ─────────────────────────────────────────
+// ─── 1. 피부 분석 탭 ──────────────────────────────────────
+
+type AnalysisWithIndex = SkinAnalysis & { originalIndex: number }
 
 function SkinAnalysisTab() {
   const router = useRouter()
@@ -246,18 +228,7 @@ function SkinAnalysisTab() {
                           </div>
                         )}
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={(e) => handleDelete(e, item.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" />삭제
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <DeleteMenu onDelete={(e) => handleDelete(e, item.id)} />
                     </div>
                   </div>
                 </button>
@@ -271,7 +242,7 @@ function SkinAnalysisTab() {
   )
 }
 
-// ─── 관상 탭 ──────────────────────────────────────────────
+// ─── 2. 관상 탭 ───────────────────────────────────────────
 
 function FaceReadingTab() {
   const router = useRouter()
@@ -337,18 +308,7 @@ function FaceReadingTab() {
                     <p className="text-sm text-gray-400">유형 분석 중</p>
                   )}
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={(e) => handleDelete(e, item.id)}>
-                      <Trash2 className="w-4 h-4 mr-2" />삭제
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DeleteMenu onDelete={(e) => handleDelete(e, item.id)} />
               </div>
             </div>
           </button>
@@ -358,369 +318,208 @@ function FaceReadingTab() {
   )
 }
 
-// ─── 전생/후생 탭 ─────────────────────────────────────────
+// ─── 3. 낯빛코드 탭 ───────────────────────────────────────
 
-function PastFutureTab() {
+function FaceCodeTab() {
   const router = useRouter()
-  const [pastItems, setPastItems] = useState<PastLife[]>([])
-  const [futureItems, setFutureItems] = useState<FutureLife[]>([])
+  const [items, setItems] = useState<FaceCodeAnalysis[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      pastLifeApi.getList().catch(() => [] as PastLife[]),
-      futureLifeApi.getList().catch(() => [] as FutureLife[]),
-    ])
-      .then(([past, future]) => {
-        setPastItems(past.filter((p) => p.status === 'COMPLETED'))
-        setFutureItems(future.filter((f) => f.status === 'COMPLETED'))
-      })
-      .catch((err) => { if (!(err instanceof UnauthenticatedError)) toast.error('기록을 불러오는 데 실패했습니다.') })
+    faceCodeApi.getList()
+      .then((data) => setItems(data.filter((x) => x.status === 'COMPLETED')))
+      .catch((err) => { if (!(err instanceof UnauthenticatedError)) toast.error('낯빛코드 기록을 불러오는 데 실패했습니다.') })
       .finally(() => setLoading(false))
   }, [])
 
-  const handleDeletePast = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
-    try { await pastLifeApi.delete(id); setPastItems((prev) => prev.filter((p) => p.id !== id)); toast.success('전생 기록이 삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
-  }
-  const handleDeleteFuture = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
-    try { await futureLifeApi.delete(id); setFutureItems((prev) => prev.filter((f) => f.id !== id)); toast.success('후생 기록이 삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
+    try {
+      await faceCodeApi.delete(id)
+      setItems((prev) => prev.filter((x) => x.id !== id))
+      toast.success('낯빛코드 기록이 삭제되었습니다.')
+    } catch { toast.error('삭제에 실패했습니다.') }
   }
 
   if (loading) return <LoadingSkeleton />
-  if (pastItems.length === 0 && futureItems.length === 0) return (
-    <EmptyState emoji="✨" title="아직 기록이 없습니다" desc="스튜디오에서 전생/후생 보기를 시작해보세요"
-      label="전생 보기 시작" color="bg-amber-500 hover:bg-amber-600" onClick={() => router.push('/studio/past-life')} />
+  if (items.length === 0) return (
+    <EmptyState emoji="🔮" title="아직 낯빛코드 기록이 없어요" desc="스튜디오에서 낯빛코드를 확인해보세요"
+      label="낯빛코드 분석하기" color="bg-rose-500 hover:bg-rose-600" onClick={() => router.push('/studio/face-code')} />
   )
 
   return (
     <div className="pb-10">
-      {pastItems.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">전생</span></div>
-          {pastItems.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/past-life/result?id=${item.id}`)}>
-                {item.generatedImageUrl ? (
-                  <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                    <Image src={item.generatedImageUrl} alt="전생 이미지" width={60} height={60} className="w-full h-full object-cover" quality={70} />
-                  </div>
-                ) : (
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center flex-shrink-0 text-2xl">
-                    {PAST_ERA_EMOJI[item.era]}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      <p className="text-base font-bold text-amber-600">{PAST_ERA_EMOJI[item.era]} {PAST_ERA_LABEL[item.era]}</p>
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={(e) => handleDeletePast(e, item.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" />삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+      {items.map((item) => {
+        const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
+        return (
+          <button key={item.id}
+            className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
+            onClick={() => router.push(`/studio/face-code/result?id=${item.id}`)}>
+            {item.imageUrl ? (
+              <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
+                <Image src={item.imageUrl} alt="낯빛코드 사진" width={60} height={60} className="w-full h-full object-cover" quality={70} />
+              </div>
+            ) : (
+              <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center flex-shrink-0 text-2xl">🔮</div>
+            )}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
+                  {item.faceCode ? (
+                    <>
+                      <p className="text-base font-bold text-rose-500 leading-snug">{item.faceCode}</p>
+                      {item.meta?.nickname && (
+                        <p className="text-sm text-gray-400 mt-0.5 truncate">{item.meta.nickname}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-400">분석 중</p>
+                  )}
                 </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-      {futureItems.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">후생</span></div>
-          {futureItems.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/future-life/result?id=${item.id}`)}>
-                {item.generatedImageUrl ? (
-                  <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                    <Image src={item.generatedImageUrl} alt="후생 이미지" width={60} height={60} className="w-full h-full object-cover" quality={70} />
-                  </div>
-                ) : (
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-cyan-50 to-violet-100 flex items-center justify-center flex-shrink-0 text-2xl">
-                    {item.category ? REBIRTH_CATEGORY_EMOJI[item.category] : '🔮'}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      <p className="text-base font-bold text-cyan-600">
-                        {item.category ? `${REBIRTH_CATEGORY_EMOJI[item.category]} ${item.rebirthType ?? REBIRTH_CATEGORY_LABEL[item.category]}` : '후생'}
-                      </p>
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={(e) => handleDeleteFuture(e, item.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" />삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                <DeleteMenu onDelete={(e) => handleDelete(e, item.id)} />
+              </div>
+            </div>
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-// ─── 스튜디오 탭 (동물상·AI프로필·나이시뮬·MBTI) ──────────
+// ─── 4. MBTI x 얼굴 탭 ───────────────────────────────────
 
-function StudioTab() {
+function MbtiMatchTab() {
   const router = useRouter()
-  const [animalFaces, setAnimalFaces] = useState<AnimalFace[]>([])
-  const [aiProfiles, setAiProfiles] = useState<AiProfile[]>([])
-  const [ageSimulations, setAgeSimulations] = useState<AgeSimulation[]>([])
-  const [mbtiMatches, setMbtiMatches] = useState<MbtiMatch[]>([])
+  const [items, setItems] = useState<MbtiMatch[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      animalFaceApi.getList().catch(() => [] as AnimalFace[]),
-      aiProfileApi.getList().catch(() => [] as AiProfile[]),
-      ageSimulationApi.getList().catch(() => [] as AgeSimulation[]),
-      mbtiMatchApi.getList().catch(() => [] as MbtiMatch[]),
-    ])
-      .then(([af, ap, as_, mm]) => {
-        setAnimalFaces(af.filter((x) => x.status === 'COMPLETED'))
-        setAiProfiles(ap.filter((x) => x.status === 'COMPLETED'))
-        setAgeSimulations(as_.filter((x) => x.status === 'COMPLETED'))
-        setMbtiMatches(mm.filter((x) => x.status === 'COMPLETED'))
-      })
-      .catch((err) => { if (!(err instanceof UnauthenticatedError)) toast.error('기록을 불러오는 데 실패했습니다.') })
+    mbtiMatchApi.getList()
+      .then((data) => setItems(data.filter((x) => x.status === 'COMPLETED')))
+      .catch((err) => { if (!(err instanceof UnauthenticatedError)) toast.error('MBTI 기록을 불러오는 데 실패했습니다.') })
       .finally(() => setLoading(false))
   }, [])
 
-  const handleDeleteAnimalFace = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
-    try { await animalFaceApi.delete(id); setAnimalFaces((prev) => prev.filter((x) => x.id !== id)); toast.success('삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
-  }
-  const handleDeleteAiProfile = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
-    try { await aiProfileApi.delete(id); setAiProfiles((prev) => prev.filter((x) => x.id !== id)); toast.success('삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
-  }
-  const handleDeleteAgeSimulation = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
-    try { await ageSimulationApi.delete(id); setAgeSimulations((prev) => prev.filter((x) => x.id !== id)); toast.success('삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
-  }
-  const handleDeleteMbtiMatch = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
-    try { await mbtiMatchApi.delete(id); setMbtiMatches((prev) => prev.filter((x) => x.id !== id)); toast.success('삭제되었습니다.') }
-    catch { toast.error('삭제에 실패했습니다.') }
+    try {
+      await mbtiMatchApi.delete(id)
+      setItems((prev) => prev.filter((x) => x.id !== id))
+      toast.success('MBTI 기록이 삭제되었습니다.')
+    } catch { toast.error('삭제에 실패했습니다.') }
   }
 
   if (loading) return <LoadingSkeleton />
-
-  const isEmpty = animalFaces.length === 0 && aiProfiles.length === 0 && ageSimulations.length === 0 && mbtiMatches.length === 0
-  if (isEmpty) return (
-    <EmptyState emoji="🎨" title="아직 스튜디오 기록이 없어요" desc="동물상, AI 프로필, 나이 시뮬레이션 등을 이용해보세요"
-      label="스튜디오 가기" color="bg-violet-600 hover:bg-violet-700" onClick={() => router.push('/studio')} />
+  if (items.length === 0) return (
+    <EmptyState emoji="🧬" title="아직 MBTI 매칭 기록이 없어요" desc="내 얼굴과 MBTI가 얼마나 일치하는지 확인해보세요"
+      label="MBTI 매칭 시작" color="bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push('/studio/mbti-match')} />
   )
-
-  function DeleteMenu({ onDelete }: { onDelete: (e: React.MouseEvent) => void }) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="text-rose-600 focus:text-rose-600" onClick={onDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />삭제
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    )
-  }
 
   return (
     <div className="pb-10">
-      {/* 동물상 */}
-      {animalFaces.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">동물상</span></div>
-          {animalFaces.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/animal-face/result?id=${item.id}`)}>
-                {item.sourceImageUrl ? (
-                  <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                    <Image src={item.sourceImageUrl} alt="동물상 사진" width={60} height={60} className="w-full h-full object-cover" quality={70} />
-                  </div>
-                ) : (
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-orange-50 to-rose-100 flex items-center justify-center flex-shrink-0 text-2xl">
-                    {item.animalType ? ANIMAL_TYPE_EMOJI[item.animalType] : '🦊'}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      {item.animalType ? (
-                        <p className="text-base font-bold text-orange-600">
-                          {ANIMAL_TYPE_EMOJI[item.animalType]} {ANIMAL_TYPE_LABEL[item.animalType]}
-                          {item.subType && <span className="text-sm font-normal text-gray-400 ml-1">({item.subType})</span>}
-                        </p>
-                      ) : <p className="text-sm text-gray-400">분석 중</p>}
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DeleteMenu onDelete={(e) => handleDeleteAnimalFace(e, item.id)} />
-                  </div>
+      {items.map((item) => {
+        const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
+        return (
+          <button key={item.id}
+            className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
+            onClick={() => router.push(`/studio/mbti-match/result?id=${item.id}`)}>
+            <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-100 flex items-center justify-center flex-shrink-0 text-xl font-bold text-indigo-600">
+              {item.mbti}
+            </div>
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
+                  {item.matchLevel ? (
+                    <p className="text-base font-bold text-indigo-600">
+                      {MATCH_LEVEL_EMOJI[item.matchLevel]} {MATCH_LEVEL_LABEL[item.matchLevel]}
+                      <span className="text-sm font-normal text-gray-400 ml-1">({item.overallMatchRate}%)</span>
+                    </p>
+                  ) : <p className="text-sm text-gray-400">분석 중</p>}
+                  {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
                 </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                <DeleteMenu onDelete={(e) => handleDelete(e, item.id)} />
+              </div>
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
-      {/* AI 프로필 */}
-      {aiProfiles.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">AI 프로필</span></div>
-          {aiProfiles.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/ai-profile/result?id=${item.id}`)}>
-                {item.generatedImageUrl ? (
-                  <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                    <Image src={item.generatedImageUrl} alt="AI 프로필" width={60} height={60} className="w-full h-full object-cover" quality={70} />
-                  </div>
-                ) : (
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-pink-50 to-rose-100 flex items-center justify-center flex-shrink-0 text-2xl">🎨</div>
-                )}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      {item.style ? (
-                        <p className="text-base font-bold text-pink-600">🎨 {PROFILE_STYLE_LABEL[item.style]}</p>
-                      ) : <p className="text-sm text-gray-400">생성 중</p>}
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DeleteMenu onDelete={(e) => handleDeleteAiProfile(e, item.id)} />
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+// ─── 5. 나이 시뮬레이션 탭 ───────────────────────────────
 
-      {/* 나이 시뮬레이션 */}
-      {ageSimulations.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">나이 시뮬레이션</span></div>
-          {ageSimulations.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/age-simulation/result?id=${item.id}`)}>
-                {item.generatedImageUrl ? (
-                  <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
-                    <Image src={item.generatedImageUrl} alt="나이 시뮬레이션" width={60} height={60} className="w-full h-full object-cover" quality={70} />
-                  </div>
-                ) : (
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center flex-shrink-0 text-2xl">⏳</div>
-                )}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      <p className="text-base font-bold text-amber-600">⏳ {item.targetAge}세 시뮬레이션</p>
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DeleteMenu onDelete={(e) => handleDeleteAgeSimulation(e, item.id)} />
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+function AgeSimulationTab() {
+  const router = useRouter()
+  const [items, setItems] = useState<AgeSimulation[]>([])
+  const [loading, setLoading] = useState(true)
 
-      {/* MBTI 매칭 */}
-      {mbtiMatches.length > 0 && (
-        <div className="mb-1">
-          <div className="px-5 pt-4 pb-1"><span className="text-sm font-semibold text-gray-400 tracking-wide">MBTI 매칭</span></div>
-          {mbtiMatches.map((item) => {
-            const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
-            return (
-              <button key={item.id}
-                className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
-                onClick={() => router.push(`/studio/mbti-match/result?id=${item.id}`)}>
-                <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-100 flex items-center justify-center flex-shrink-0 text-xl font-bold text-indigo-600">
-                  {item.mbti}
+  useEffect(() => {
+    ageSimulationApi.getList()
+      .then((data) => setItems(data.filter((x) => x.status === 'COMPLETED')))
+      .catch((err) => { if (!(err instanceof UnauthenticatedError)) toast.error('나이 시뮬레이션 기록을 불러오는 데 실패했습니다.') })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation()
+    try {
+      await ageSimulationApi.delete(id)
+      setItems((prev) => prev.filter((x) => x.id !== id))
+      toast.success('나이 시뮬레이션 기록이 삭제되었습니다.')
+    } catch { toast.error('삭제에 실패했습니다.') }
+  }
+
+  if (loading) return <LoadingSkeleton />
+  if (items.length === 0) return (
+    <EmptyState emoji="⏳" title="아직 나이 시뮬레이션 기록이 없어요" desc="내 미래 얼굴을 AI로 확인해보세요"
+      label="나이 시뮬레이션 시작" color="bg-amber-500 hover:bg-amber-600" onClick={() => router.push('/studio/age-simulation')} />
+  )
+
+  return (
+    <div className="pb-10">
+      {items.map((item) => {
+        const formattedDate = item.createdAt ? formatDate(item.createdAt) : null
+        return (
+          <button key={item.id}
+            className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-100"
+            onClick={() => router.push(`/studio/age-simulation/result?id=${item.id}`)}>
+            {item.generatedImageUrl ? (
+              <div className="w-[60px] h-[60px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100">
+                <Image src={item.generatedImageUrl} alt="나이 시뮬레이션" width={60} height={60} className="w-full h-full object-cover" quality={70} />
+              </div>
+            ) : (
+              <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center flex-shrink-0 text-2xl">⏳</div>
+            )}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
+                  <p className="text-base font-bold text-amber-600">⏳ {item.targetAge}세 시뮬레이션</p>
+                  {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
                 </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      {formattedDate && <p className="text-sm font-semibold text-gray-800 mb-1">{formattedDate.main}</p>}
-                      {item.matchLevel ? (
-                        <p className="text-base font-bold text-indigo-600">
-                          {MATCH_LEVEL_EMOJI[item.matchLevel]} {MATCH_LEVEL_LABEL[item.matchLevel]}
-                          <span className="text-sm font-normal text-gray-400 ml-1">({item.overallMatchRate}%)</span>
-                        </p>
-                      ) : <p className="text-sm text-gray-400">분석 중</p>}
-                      {item.wittyOneLiner && <p className="text-xs text-gray-500 mt-1 truncate">{item.wittyOneLiner}</p>}
-                    </div>
-                    <DeleteMenu onDelete={(e) => handleDeleteMbtiMatch(e, item.id)} />
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                <DeleteMenu onDelete={(e) => handleDelete(e, item.id)} />
+              </div>
+            </div>
+          </button>
+        )
+      })}
     </div>
   )
 }
 
 // ─── 메인 페이지 ──────────────────────────────────────────
 
-type TabId = 'skin' | 'face-reading' | 'past-life' | 'studio'
+type TabId = 'skin' | 'face-reading' | 'face-code' | 'mbti-match' | 'age-simulation'
 
 const TAB_LABELS: { id: TabId; label: string }[] = [
   { id: 'skin', label: '피부 분석' },
   { id: 'face-reading', label: '관상' },
-  { id: 'past-life', label: '전생/후생' },
-  { id: 'studio', label: '스튜디오' },
+  { id: 'face-code', label: '낯빛코드' },
+  { id: 'mbti-match', label: 'MBTI x 얼굴' },
+  { id: 'age-simulation', label: '나이 시뮬' },
 ]
 
 export default function HistoryPage() {
@@ -733,7 +532,8 @@ export default function HistoryPage() {
         <p className="text-sm text-gray-400 mt-0.5">나의 분석 히스토리</p>
       </div>
 
-      <div className="flex border-b border-gray-100 overflow-x-auto">
+      {/* 탭 바 — overflow-x-auto로 스크롤 가능 */}
+      <div className="flex border-b border-gray-100 overflow-x-auto scrollbar-none">
         {TAB_LABELS.map(({ id, label }) => (
           <button key={id} onClick={() => setActiveTab(id)}
             className={`px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${activeTab === id ? 'text-indigo-600' : 'text-gray-400'}`}>
@@ -745,8 +545,9 @@ export default function HistoryPage() {
 
       {activeTab === 'skin' && <SkinAnalysisTab />}
       {activeTab === 'face-reading' && <FaceReadingTab />}
-      {activeTab === 'past-life' && <PastFutureTab />}
-      {activeTab === 'studio' && <StudioTab />}
+      {activeTab === 'face-code' && <FaceCodeTab />}
+      {activeTab === 'mbti-match' && <MbtiMatchTab />}
+      {activeTab === 'age-simulation' && <AgeSimulationTab />}
     </div>
   )
 }

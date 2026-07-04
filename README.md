@@ -38,7 +38,7 @@ src/
 | `/camera` | 사진 촬영 (미러/플래시/갤러리 업로드) |
 | `/analysis-loading` | 피부 분석 진행 중 |
 | `/analysis-result` | 피부 분석 결과 |
-| `/history` | 분석 이력 (탭: 피부/관상/전생/후생/동물상/나이/프로필/MBTI) |
+| `/history` | 분석 이력 (탭: 피부/관상/스튜디오) |
 | `/my-skin` | 내 피부 정보 |
 | `/onboarding` | 최초 가입 튜토리얼 |
 
@@ -50,18 +50,6 @@ src/
 | `/studio/face-reading` | 관상보기 |
 | `/studio/face-reading/loading` | 관상 분석 로딩 |
 | `/studio/face-reading/result` | 관상 결과 |
-| `/studio/animal-face` | 동물상 테스트 |
-| `/studio/animal-face/loading` | 동물상 분석 로딩 |
-| `/studio/animal-face/result` | 동물상 결과 |
-| `/studio/past-life` | 전생 보기 |
-| `/studio/past-life/loading` | 전생 이미지 생성 로딩 |
-| `/studio/past-life/result` | 전생 결과 |
-| `/studio/future-life` | 후생 보기 |
-| `/studio/future-life/loading` | 후생 이미지 생성 로딩 |
-| `/studio/future-life/result` | 후생 결과 |
-| `/studio/ai-profile` | AI 프로필 생성 |
-| `/studio/ai-profile/loading` | AI 프로필 생성 로딩 |
-| `/studio/ai-profile/result` | AI 프로필 결과 |
 | `/studio/age-simulation` | 나이 시뮬레이션 |
 | `/studio/age-simulation/loading` | 나이 시뮬레이션 로딩 |
 | `/studio/age-simulation/result` | 나이 시뮬레이션 결과 |
@@ -73,8 +61,6 @@ src/
 | 경로 | 설명 |
 |---|---|
 | `/playground/face-reading` | 관상보기 무료 체험 |
-| `/playground/past-life` | 전생 무료 체험 |
-| `/playground/future-life` | 후생 무료 체험 |
 
 ### 설정 / 계정
 

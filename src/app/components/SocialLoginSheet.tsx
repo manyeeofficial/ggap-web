@@ -39,7 +39,7 @@ export function SocialLoginSheet({ open, onOpenChange }: Props) {
           <DrawerTitle className="text-center text-base font-bold">
             로그인하고 더 많은 기능을 이용하세요
           </DrawerTitle>
-          <p className="text-center text-xs text-gray-500 mt-1">관상·동물상·AI프로필 등 6가지 기능 무료 이용</p>
+          <p className="text-center text-xs text-gray-500 mt-1">관상·MBTI·나이 시뮬레이션 등 다양한 기능 무료 이용</p>
         </DrawerHeader>
 
         <div className="px-5 pb-8 pt-3 space-y-3">

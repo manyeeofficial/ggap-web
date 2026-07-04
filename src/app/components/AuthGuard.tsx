@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { deleteCookies } from '@/lib/api/client'
 
-const PUBLIC_PATHS = ['/', '/onboarding', '/mypage/apple-callback', '/auth/naver', '/auth/kakao', '/terms', '/privacy', '/camera', '/analysis-loading', '/analysis-result', '/studio', '/my-skin']
+const PUBLIC_PATHS = ['/', '/onboarding', '/mypage/apple-callback', '/auth/naver', '/auth/kakao', '/terms', '/privacy', '/camera', '/loading', '/analysis-result', '/studio', '/my-skin']
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 

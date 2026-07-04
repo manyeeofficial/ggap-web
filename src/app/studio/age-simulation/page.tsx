@@ -63,7 +63,7 @@ function AgeSimulationContent() {
     setSubmitting(true)
     try {
       const result = await ageSimulationApi.create(params)
-      router.push(`/studio/age-simulation/loading?id=${result.id}`)
+      router.push(`/loading?type=age-simulation&id=${result.id}`)
     } catch (err: unknown) {
       const status = (err as { response?: { status: number } })?.response?.status
       if (status === 403) {

@@ -9,6 +9,7 @@ import { ChevronLeft, RotateCcw, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { mbtiMatchApi } from '@/lib/api'
 import type { MbtiMatch, MatchLevel, MbtiAxis } from '@/lib/types'
+import { parseFaceCode } from '@/lib/face-code/faceCode'
 
 const MATCH_LEVEL_LABEL: Record<MatchLevel, string> = {
   SPOILER: '얼굴이 스포일러',
@@ -99,7 +100,7 @@ function MbtiMatchResultContent() {
       {/* 헤더 */}
       <div className="flex items-center px-4 pt-6 pb-4">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push('/studio')}
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100"
         >
           <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -182,6 +183,38 @@ function MbtiMatchResultContent() {
           </div>
         </div>
       )}
+
+      {/* 겉(낯빛코드) vs 속(MBTI) */}
+      {result.faceCode && (() => {
+        const fc = parseFaceCode(result.faceCode!)
+        return (
+          <div className="px-5 mb-5">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">겉 vs 속</p>
+            <div className="rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-2">
+                {/* 겉 — 낯빛코드(인상) */}
+                <div className={`p-4 text-white bg-gradient-to-br ${fc?.gradient ?? 'from-violet-500 to-fuchsia-600'}`}>
+                  <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wide">겉 · 낯빛코드</p>
+                  <p className="text-2xl font-black mt-1">{result.faceCode}</p>
+                  {fc && <p className="text-white/80 text-xs mt-0.5">{fc.meta.nickname}</p>}
+                  {fc && <p className="text-white/70 text-[11px] mt-1">{fc.axisKeywords.join(' · ')}</p>}
+                </div>
+                {/* 속 — MBTI */}
+                <div className="p-4 bg-gray-900 text-white">
+                  <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wide">속 · MBTI</p>
+                  <p className="text-2xl font-black mt-1">{result.mbti}</p>
+                  <p className="text-white/60 text-xs mt-0.5">실제 성향</p>
+                </div>
+              </div>
+              {result.outerVsInnerNote && (
+                <div className="p-4 bg-white">
+                  <p className="text-sm text-gray-700 leading-relaxed">{result.outerVsInnerNote}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* 하단 버튼 */}
       <div className="px-5 mt-4">

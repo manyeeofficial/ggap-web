@@ -1,30 +1,21 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/app/components/ui/button'
-import { Skeleton } from '@/app/components/ui/skeleton'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Camera, ChevronLeft, Zap, Upload } from 'lucide-react'
+import { Camera, ChevronLeft, Upload } from 'lucide-react'
 import { toast } from 'sonner'
-import { faceReadingApi, skinAnalysisApi } from '@/lib/api'
-import { useMemberStore } from '@/lib/store/member-store'
+import { Skeleton } from '@/app/components/ui/skeleton'
+import { faceCodeApi, skinAnalysisApi } from '@/lib/api'
 import type { SkinAnalysis } from '@/lib/types'
-import { Suspense } from 'react'
 
-function FaceReadingContent() {
+function FaceCodeEntryContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { member, isLoaded, fetchMember } = useMemberStore()
   const [recentAnalysis, setRecentAnalysis] = useState<SkinAnalysis | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const apiCalledRef = useRef(false)
-
-  useEffect(() => {
-    if (!isLoaded) fetchMember()
-  }, [isLoaded, fetchMember])
 
   useEffect(() => {
     skinAnalysisApi
@@ -37,13 +28,13 @@ function FaceReadingContent() {
       .finally(() => setLoading(false))
   }, [])
 
-  // 카메라에서 돌아왔을 때 (imageData 쿼리 파라미터 또는 sessionStorage)
+  // 카메라에서 돌아왔을 때 (전용 sessionStorage key)
   useEffect(() => {
     if (apiCalledRef.current) return
-    const imageData = sessionStorage.getItem('faceReadingImage')
+    const imageData = sessionStorage.getItem('faceCodeImage')
     if (!imageData) return
     apiCalledRef.current = true
-    sessionStorage.removeItem('faceReadingImage')
+    sessionStorage.removeItem('faceCodeImage')
 
     const [header, base64] = imageData.split(',')
     const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg'
@@ -51,7 +42,6 @@ function FaceReadingContent() {
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
     const file = new File([bytes], 'face.jpg', { type: mime })
-
     startAnalysis({ image: file })
   }, [])
 
@@ -59,15 +49,10 @@ function FaceReadingContent() {
     if (submitting) return
     setSubmitting(true)
     try {
-      const result = await faceReadingApi.create(params)
-      router.push(`/loading?type=playground-face-reading&id=${result.id}`)
-    } catch (err: unknown) {
-      const status = (err as { response?: { status: number } })?.response?.status
-      if (status === 403) {
-        toast.error('크레딧이 부족합니다. 친구를 초대해 크레딧을 충전하세요.')
-      } else {
-        toast.error('관상 분석 요청에 실패했습니다.')
-      }
+      const result = await faceCodeApi.create(params)
+      router.push(`/loading?type=face-code&id=${result.id}`)
+    } catch {
+      toast.error('낯빛코드 분석 요청에 실패했습니다.')
       setSubmitting(false)
     }
   }
@@ -77,13 +62,6 @@ function FaceReadingContent() {
     if (!file) return
     startAnalysis({ image: file })
   }
-
-  const handleCameraCapture = () => {
-    router.push('/camera?returnTo=/playground/face-reading')
-  }
-
-  const credit = member?.credit ?? 0
-  const hasCredit = credit > 0
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,24 +73,18 @@ function FaceReadingContent() {
         >
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900 ml-2">관상보기</h1>
+        <h1 className="text-lg font-bold text-gray-900 ml-2">낯빛코드</h1>
       </div>
 
       {/* 소개 */}
       <div className="px-5 pb-6 border-b border-gray-100">
-        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-5 border border-violet-100">
-          <div className="text-3xl mb-3">👁️</div>
-          <h2 className="text-base font-bold text-gray-900 mb-1">전통 동양 관상학 분석</h2>
+        <div className="bg-gradient-to-br from-fuchsia-50 to-violet-50 rounded-3xl p-5 border border-fuchsia-100">
+          <div className="text-3xl mb-3">🔮</div>
+          <h2 className="text-base font-bold text-gray-900 mb-1">12유형 얼굴 성격 분석</h2>
           <p className="text-sm text-gray-500 leading-relaxed">
-            이마·눈·코·입 등 9개 부위를 분석해<br />
-            숨겨진 운세와 기질을 알려드려요
+            얼굴 인상을 세 글자 코드로 풀어<br />
+            성격·강점·궁합을 알려드려요
           </p>
-          {isLoaded && (
-            <div className="flex items-center gap-1.5 mt-3">
-              <Zap className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-xs font-semibold text-indigo-600">크레딧 {credit}회 남음</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -120,12 +92,11 @@ function FaceReadingContent() {
       <div className="px-5 py-6 space-y-4">
         <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">사진 선택</p>
 
-        {/* 최근 분석 사진 사용 */}
         {loading ? (
           <Skeleton className="h-20 w-full rounded-2xl" />
         ) : recentAnalysis?.imageUrl ? (
           <button
-            disabled={!hasCredit || submitting}
+            disabled={submitting}
             onClick={() => startAnalysis({ skinAnalysisId: recentAnalysis.id })}
             className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -140,15 +111,14 @@ function FaceReadingContent() {
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-semibold text-gray-800">최근 분석 사진 사용</p>
-              <p className="text-xs text-gray-400 mt-0.5">가장 최근에 분석한 사진으로 시작하기</p>
+              <p className="text-xs text-gray-400 mt-0.5">관상 점수가 있으면 더 빠르게 분석돼요</p>
             </div>
           </button>
         ) : null}
 
-        {/* 카메라 촬영 */}
         <button
-          disabled={!hasCredit || submitting}
-          onClick={handleCameraCapture}
+          disabled={submitting}
+          onClick={() => router.push('/camera?returnTo=/studio/face-code')}
           className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="w-14 h-14 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
@@ -160,9 +130,8 @@ function FaceReadingContent() {
           </div>
         </button>
 
-        {/* 파일 업로드 */}
         <button
-          disabled={!hasCredit || submitting}
+          disabled={submitting}
           onClick={() => fileInputRef.current?.click()}
           className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -183,23 +152,6 @@ function FaceReadingContent() {
         />
       </div>
 
-      {/* 크레딧 부족 안내 */}
-      {isLoaded && !hasCredit && (
-        <div className="px-5">
-          <div className="bg-rose-50 rounded-2xl px-4 py-3.5 border border-rose-100">
-            <p className="text-sm font-semibold text-rose-700 mb-1">크레딧이 부족해요</p>
-            <p className="text-xs text-rose-500">친구를 초대하면 +3회 크레딧을 받을 수 있어요</p>
-            <Button
-              size="sm"
-              className="mt-3 bg-rose-600 hover:bg-rose-700 rounded-full"
-              onClick={() => router.push('/settings')}
-            >
-              크레딧 충전하기
-            </Button>
-          </div>
-        </div>
-      )}
-
       {submitting && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl px-6 py-5 flex items-center gap-3">
@@ -212,10 +164,10 @@ function FaceReadingContent() {
   )
 }
 
-export default function FaceReadingPage() {
+export default function FaceCodeEntryPage() {
   return (
     <Suspense>
-      <FaceReadingContent />
+      <FaceCodeEntryContent />
     </Suspense>
   )
 }

@@ -107,7 +107,7 @@ export default function AnalysisResultContent() {
       <div className="min-h-screen bg-white">
         <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
           <div className="relative flex items-center justify-center h-14 px-4">
-            <button onClick={() => router.back()} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
+            <button onClick={() => router.push('/')} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-base font-semibold">얼굴값 분석 결과</h1>
@@ -128,7 +128,7 @@ export default function AnalysisResultContent() {
       <div className="min-h-screen bg-white">
         <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
           <div className="relative flex items-center justify-center h-14 px-4">
-            <button onClick={() => router.back()} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
+            <button onClick={() => router.push('/')} className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-base font-semibold">얼굴값 분석 결과</h1>
@@ -160,7 +160,7 @@ export default function AnalysisResultContent() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="relative flex items-center justify-center h-14 px-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="absolute left-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />

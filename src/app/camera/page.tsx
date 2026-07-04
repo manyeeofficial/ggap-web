@@ -160,12 +160,13 @@ function CameraContent() {
     if (!capturedImage) return
     try {
       if (returnTo) {
-        // returnTo 경로로 이미지 전달 (sessionStorage key: returnTo 경로 기반)
-        sessionStorage.setItem('faceReadingImage', capturedImage)
+        // returnTo 경로 기반 sessionStorage key (낯빛코드는 전용 key 사용)
+        const key = returnTo.includes('/studio/face-code') ? 'faceCodeImage' : 'faceReadingImage'
+        sessionStorage.setItem(key, capturedImage)
         router.push(returnTo)
       } else {
         sessionStorage.setItem('capturedImage', capturedImage)
-        router.push('/analysis-loading')
+        router.push('/loading?type=skin-analysis')
       }
     } catch {
       toast.error('이미지 저장에 실패했습니다. 다시 시도해주세요.')

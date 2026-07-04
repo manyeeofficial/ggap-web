@@ -50,7 +50,7 @@
 
 - 스튜디오/플레이그라운드의 모든 로딩 페이지는 `StudioLoadingPage` 컴포넌트 사용
 - 얼굴 분석 기능(`showFaceScan: true`)에는 SVG 페이스 스캔 애니메이션 표시
-- 이미지 생성 기능(전생/후생/나이 시뮬레이션/AI 프로필)은 `progressMode: 'slow'` 설정
+- 이미지 생성 기능(나이 시뮬레이션)은 `progressMode: 'slow'` 설정
 - `discoveries` 배열로 "방금 발견했어요" 카드 콘텐츠 정의
 
 ## 인증

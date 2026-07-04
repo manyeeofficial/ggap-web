@@ -22,10 +22,13 @@ export function BottomNavWrapper({ children }: { children: ReactNode }) {
   const lastScrollY = useRef(0)
   const [scrollDir, setScrollDir] = useState<'up' | 'down'>('up')
 
-  const showBottomNav = bottomNavPages.some(page => {
-    if (page === '/') return pathname === '/'
-    return pathname.startsWith(page)
-  })
+  // /loading 경로에서는 항상 숨김 (로딩 화면에서 네비 노출 방지)
+  const showBottomNav =
+    !pathname.startsWith('/loading') &&
+    bottomNavPages.some(page => {
+      if (page === '/') return pathname === '/'
+      return pathname.startsWith(page)
+    })
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/'

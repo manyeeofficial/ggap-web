@@ -9,6 +9,7 @@ import { ChevronLeft, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { faceReadingApi } from '@/lib/api'
 import type { FaceReading, FacePart, FaceReadingType, FortunePeriod, OhaengType } from '@/lib/types'
+import { deriveFaceCode, parseFaceCode, characterFor } from '@/lib/face-code/faceCode'
 import {
   LineChart,
   Line,
@@ -179,6 +180,11 @@ function FaceReadingResultContent() {
   const overallFortune = result.fortunes.find((f) => f.period === 'OVERALL')
   const overallScore = overallFortune?.score ?? 0
 
+  // 낯빛코드(페이스코드) — 백엔드 저장값(canonical) 우선, 없으면(레거시) 9부위 점수로 산출
+  const faceCode = result.faceCode
+    ? parseFaceCode(result.faceCode) ?? deriveFaceCode(result)
+    : deriveFaceCode(result)
+
   // 인생 그래프 데이터 (LineChart)
   const lifeGraphData = (['EARLY', 'MID', 'LATE'] as FortunePeriod[]).map((p) => ({
     name: PERIOD_LABEL[p],
@@ -195,13 +201,32 @@ function FaceReadingResultContent() {
       {/* 헤더 */}
       <div className="flex items-center px-4 pt-6 pb-4">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push('/studio')}
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100"
         >
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
         <h1 className="text-lg font-bold text-gray-900 ml-2">관상 결과</h1>
       </div>
+
+      {/* 낯빛코드 교차 CTA — 성격 콘텐츠는 낯빛코드 기능으로 분리 (운세는 관상에 유지) */}
+      {faceCode && (
+        <div className="px-5 mb-5">
+          <button
+            onClick={() => router.push('/studio/face-code')}
+            className={`w-full rounded-3xl p-4 text-white bg-gradient-to-br ${faceCode.gradient} flex items-center gap-3 active:scale-[0.99] transition-transform shadow-sm`}
+          >
+            <div className="text-3xl">{characterFor(faceCode.code)}</div>
+            <div className="flex-1 text-left">
+              <p className="text-white/60 text-[10px] font-semibold uppercase tracking-[0.2em]">낯빛코드</p>
+              <p className="text-lg font-black leading-tight">
+                {faceCode.code} · {faceCode.meta.nickname}
+              </p>
+              <p className="text-white/70 text-xs mt-0.5">성격·궁합 자세히 보기 →</p>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* 종합 유형 카드 */}
       <div className="px-5 mb-5">

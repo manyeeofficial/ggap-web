@@ -163,7 +163,7 @@ function FaceReadingContent() {
     setSubmitting(true)
     try {
       const result = await faceReadingApi.create(params)
-      router.push(`/studio/face-reading/loading?id=${result.id}`)
+      router.push(`/loading?type=face-reading&id=${result.id}`)
     } catch (err: unknown) {
       const status = (err as { response?: { status: number } })?.response?.status
       if (status === 403) {
